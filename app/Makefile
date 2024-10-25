@@ -30,6 +30,18 @@ $(info ************ TARGET_NAME  = [$(TARGET_NAME)])
 
 include $(CURDIR)/../deps/ledger-zxlib/makefiles/Makefile.app_testing
 
+# Display whether this is a production build or for internal use
+PRODUCTION_BUILD ?= 1
+ifeq ($(PRODUCTION_BUILD), 1)
+    $(info ************ PRODUCTION_BUILD  = [PRODUCTION BUILD])
+else
+    $(info ************ PRODUCTION_BUILD  = [INTERNAL USE])
+endif
+
+# Add the PRODUCTION_BUILD definition to the compiler flags
+DEFINES += PRODUCTION_BUILD=$(PRODUCTION_BUILD)
+
+
 ifndef COIN
 COIN=FLR
 endif
