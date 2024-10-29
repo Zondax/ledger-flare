@@ -31,6 +31,7 @@
 
 eth_tx_t eth_tx_obj;
 #define FLARE_MAINNET_CHAINID 14
+#define COSTON_CHAINID 16
 #define SONG_BIRD_CHAINID 19
 #define COSTON2_CHAINID 114
 #define DATA_BYTES_TO_PRINT 10
@@ -52,7 +53,8 @@ static parser_error_t readChainID(parser_context_t *ctx, rlp_t *chainId) {
     }
 
     // Check allowed values for chain id
-    if (tmpChainId != FLARE_MAINNET_CHAINID && tmpChainId != SONG_BIRD_CHAINID && tmpChainId != COSTON2_CHAINID) {
+    if (tmpChainId != FLARE_MAINNET_CHAINID && tmpChainId != COSTON_CHAINID && tmpChainId != SONG_BIRD_CHAINID &&
+        tmpChainId != COSTON2_CHAINID) {
         return parser_invalid_chain_id;
     }
 

@@ -106,7 +106,7 @@ parser_error_t printAddress(const uint8_t *pubkey, network_id_e network_id, char
             hrp = "song";
             break;
         case coston:
-            hrp = "costwo";
+            hrp = "coston";
             break;
         case coston2:
             hrp = "costwo";
