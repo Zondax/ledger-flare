@@ -14,7 +14,7 @@
  *  limitations under the License.
  ******************************************************************************* */
 
-import Zemu, { ButtonKind } from '@zondax/zemu'
+import Zemu, { ButtonKind, isTouchDevice } from '@zondax/zemu'
 // @ts-ignore
 import { models, defaultOptions, ETH_PATH, EXPECTED_ETH_ADDRESS, EXPECTED_ETH_PK } from './common'
 import { ec } from 'elliptic'
@@ -154,7 +154,7 @@ describe('EthAddress', function () {
       await sim.start({
         ...defaultOptions,
         model: m.name,
-        approveKeyword: m.name === 'stax' ? 'QR' : '',
+        approveKeyword: isTouchDevice(m.name) ? 'Confirm' : '',
         approveAction: ButtonKind.ApproveTapButton,
       })
       const app = new FlareApp(sim.getTransport())

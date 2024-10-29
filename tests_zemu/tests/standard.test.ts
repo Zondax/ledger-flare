@@ -14,7 +14,7 @@
  *  limitations under the License.
  ******************************************************************************* */
 
-import Zemu, { ButtonKind, zondaxMainmenuNavigation } from '@zondax/zemu'
+import Zemu, { ButtonKind, isTouchDevice, zondaxMainmenuNavigation } from '@zondax/zemu'
 import FlareApp from '@zondax/ledger-flare'
 import { defaultOptions, models, hdpath } from './common'
 
@@ -90,7 +90,7 @@ describe('Standard', function () {
       await sim.start({
         ...defaultOptions,
         model: m.name,
-        approveKeyword: m.name === 'stax' ? 'QR' : '',
+        approveKeyword: isTouchDevice(m.name) ? 'Confirm' : '',
         approveAction: ButtonKind.ApproveTapButton,
       })
       const app = new FlareApp(sim.getTransport())
@@ -113,7 +113,11 @@ describe('Standard', function () {
   test.concurrent.each(models)('show address - reject', async function (m) {
     const sim = new Zemu(m.path)
     try {
-      await sim.start({ ...defaultOptions, model: m.name, rejectKeyword: m.name === 'stax' ? 'QR' : '' })
+      await sim.start({
+        ...defaultOptions,
+        model: m.name,
+        rejectKeyword: isTouchDevice(m.name) ? 'Confirm' : '',
+      })
       const app = new FlareApp(sim.getTransport())
 
       const respRequest = app.showAddressAndPubKey(hdpath)

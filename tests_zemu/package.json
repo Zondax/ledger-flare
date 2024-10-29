@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@zondax/ledger-flare": "../js",
-    "@zondax/zemu": "^0.49.0"
+    "@zondax/zemu": "^0.50.2"
   },
   "devDependencies": {
     "@ethereumjs/common": "^2.4.0",
