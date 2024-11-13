@@ -15,7 +15,7 @@
  ******************************************************************************* */
 
 import Zemu from '@zondax/zemu'
-import FlareApp from '@zondax/ledger-flare'
+import { FlareApp } from '@zondax/ledger-flare'
 import { models, hdpath, defaultOptions, ETH_PATH } from './common'
 import secp256k1 from 'secp256k1'
 import { createHash } from 'crypto'
@@ -124,8 +124,6 @@ describe.each(models)('Transactions', function (m) {
       expect(signatureResponse).toHaveProperty('s')
       expect(signatureResponse).toHaveProperty('r')
       expect(signatureResponse).toHaveProperty('v')
-      expect(signatureResponse.returnCode).toEqual(0x9000)
-      expect(signatureResponse.errorMessage).toEqual('No errors')
 
       const EC = new ec('secp256k1')
       const signature_obj = {
@@ -216,8 +214,6 @@ describe.each(models)('Transactions', function (m) {
       expect(signatureResponse).toHaveProperty('s')
       expect(signatureResponse).toHaveProperty('r')
       expect(signatureResponse).toHaveProperty('v')
-      expect(signatureResponse.returnCode).toEqual(0x9000)
-      expect(signatureResponse.errorMessage).toEqual('No errors')
 
       const EC = new ec('secp256k1')
       const signature_obj = {
@@ -256,8 +252,6 @@ describe.each(models)('Transactions', function (m) {
       expect(signatureResponse).toHaveProperty('s')
       expect(signatureResponse).toHaveProperty('r')
       expect(signatureResponse).toHaveProperty('v')
-      expect(signatureResponse.returnCode).toEqual(0x9000)
-      expect(signatureResponse.errorMessage).toEqual('No errors')
 
       const EC = new ec('secp256k1')
       const signature_obj = {

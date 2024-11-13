@@ -18,7 +18,7 @@ import Zemu, { ButtonKind, isTouchDevice } from '@zondax/zemu'
 // @ts-ignore
 import { models, defaultOptions, ETH_PATH, EXPECTED_ETH_ADDRESS, EXPECTED_ETH_PK } from './common'
 import { ec } from 'elliptic'
-import FlareApp from '@zondax/ledger-flare'
+import { FlareApp } from '@zondax/ledger-flare'
 
 const sha3 = require('js-sha3')
 type NftInfo = {

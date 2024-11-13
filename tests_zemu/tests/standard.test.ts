@@ -15,7 +15,7 @@
  ******************************************************************************* */
 
 import Zemu, { ButtonKind, isTouchDevice, zondaxMainmenuNavigation } from '@zondax/zemu'
-import FlareApp from '@zondax/ledger-flare'
+import { FlareApp } from '@zondax/ledger-flare'
 import { defaultOptions, models, hdpath } from './common'
 
 jest.setTimeout(60000)
@@ -50,8 +50,6 @@ describe('Standard', function () {
 
       console.log(resp)
 
-      expect(resp.returnCode).toEqual(0x9000)
-      expect(resp.errorMessage).toEqual('No errors')
       expect(resp).toHaveProperty('testMode')
       expect(resp).toHaveProperty('major')
       expect(resp).toHaveProperty('minor')
@@ -102,9 +100,6 @@ describe('Standard', function () {
 
       const resp = await respRequest
       console.log(resp)
-
-      expect(resp.returnCode).toEqual(0x9000)
-      expect(resp.errorMessage).toEqual('No errors')
     } finally {
       await sim.close()
     }
@@ -121,16 +116,15 @@ describe('Standard', function () {
       const app = new FlareApp(sim.getTransport())
 
       const respRequest = app.showAddressAndPubKey(hdpath)
+
+      expect(respRequest).rejects.toMatchObject({
+        returnCode: 0x6986,
+        errorMessage: 'Transaction rejected',
+      })
+
       // Wait until we are not in the main menu
       await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
-
       await sim.compareSnapshotsAndReject('.', `${m.prefix.toLowerCase()}-show_address_reject`)
-
-      const resp = await respRequest
-      console.log(resp)
-
-      expect(resp.returnCode).toEqual(0x6986)
-      expect(resp.errorMessage).toEqual('Transaction rejected')
     } finally {
       await sim.close()
     }

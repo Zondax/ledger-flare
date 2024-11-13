@@ -17,7 +17,7 @@
 import Zemu from '@zondax/zemu'
 import { models, defaultOptions, ETH_PATH, EXPECTED_PUBLIC_KEY } from './common'
 // @ts-ignore
-import FlareApp from '@zondax/ledger-flare'
+import { FlareApp } from '@zondax/ledger-flare'
 import { Transaction } from '@ethereumjs/tx'
 import Common from '@ethereumjs/common'
 import { rlp, bufArrToArr } from 'ethereumjs-util'
