@@ -280,5 +280,26 @@
             "4 | Hash [1/2] : 7eb6bdf75dccc487cca74adc1d5bf84b3d0edc",
             "4 | Hash [2/2] : 51761c738cd02007490711c639",
         ]
+    },
+    {
+        "index": 13,
+        "name": "Export_Tx",
+        "blob": "00000000000100000007ffb119b404c1356b6bfdb80045e27ba13c3789b5b3684f001da071cd4e6db09c000000000000000000000000000000000000000000000000000000000000000000000001d4c3a7d8f6e0e189d39a5ef3ac46cbe6223c5f0f000000025423b79c725593977d114e0891a525263b1ed6bf830ae33ba23234b531bc5cae6d5cc777000000000000000900000001725593977d114e0891a525263b1ed6bf830ae33ba23234b531bc5cae6d5cc7770000000700000002541b2640000000000000000000000001000000014caa7b6aea91a08682d2dc5b7a5fe715e18e0ed6",
+        "output": [
+            "0 | Export : C to P chain",
+            "1 | Amount : 10.001 CFLR",
+            "2 | Address [1/2] : coston1fj48k6h2jxsgdqkjm3dh5hl8zhscurk",
+            "2 | Address [2/2] : kqr9eyd",
+            "3 | Fee : 0.0005615 CFLR"
+        ],
+        "output_expert": [
+            "0 | Export : C to P chain",
+            "1 | Amount : 10.001 CFLR",
+            "2 | Address [1/2] : coston1fj48k6h2jxsgdqkjm3dh5hl8zhscurk",
+            "2 | Address [2/2] : kqr9eyd",
+            "3 | Fee : 0.0005615 CFLR",
+            "4 | Hash [1/2] : 38557d14d23be383b5bdfefd6783bda6153431",
+            "4 | Hash [2/2] : f9de86a4b953a41bf56bcddd83"
+        ]
     }
 ]

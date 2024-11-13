@@ -31,6 +31,7 @@
 
 eth_tx_t eth_tx_obj;
 #define FLARE_MAINNET_CHAINID 14
+#define COSTON_CHAINID 16
 #define SONG_BIRD_CHAINID 19
 #define COSTON2_CHAINID 114
 #define DATA_BYTES_TO_PRINT 10
@@ -52,7 +53,8 @@ static parser_error_t readChainID(parser_context_t *ctx, rlp_t *chainId) {
     }
 
     // Check allowed values for chain id
-    if (tmpChainId != FLARE_MAINNET_CHAINID && tmpChainId != SONG_BIRD_CHAINID && tmpChainId != COSTON2_CHAINID) {
+    if (tmpChainId != FLARE_MAINNET_CHAINID && tmpChainId != COSTON_CHAINID && tmpChainId != SONG_BIRD_CHAINID &&
+        tmpChainId != COSTON2_CHAINID) {
         return parser_invalid_chain_id;
     }
 
@@ -186,7 +188,7 @@ static parser_error_t printEthHash(const parser_context_t *ctx, char *outKey, ui
                                    uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount) {
     // we need to get keccak hash of the transaction data
     uint8_t hash[32] = {0};
-#if defined(TARGET_NANOS) || defined(TARGET_NANOS2) || defined(TARGET_NANOX) || defined(TARGET_STAX)
+#if defined(TARGET_NANOS) || defined(TARGET_NANOS2) || defined(TARGET_NANOX) || defined(TARGET_STAX) || defined(TARGET_FLEX)
     keccak_digest(ctx->buffer, ctx->bufferLen, hash, 32);
 #endif
 

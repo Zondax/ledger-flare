@@ -55,9 +55,9 @@ extern "C" {
 #define ADD_VALIDATOR_TX 0x0000000c
 
 #define MAINNET_ID 14
-#define COSTON_ID 16
+#define COSTON_ID 7
 #define COSTON2_ID 114
-#define SONGBIRD_ID 19
+#define SONGBIRD_ID 5
 
 #define MAX_OUTPUTS 64
 #define MAX_INPUTS 64
