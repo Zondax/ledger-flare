@@ -67,6 +67,7 @@ typedef enum {
     parser_invalid_stake_amount,
     parser_unexpected_output_locked,
     parser_unsupported_tx,
+    parser_blindsign_required,
 
     parser_invalid_rs_values,
     parser_invalid_chain_id,

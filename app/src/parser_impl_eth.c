@@ -177,8 +177,8 @@ parser_error_t _readEth(parser_context_t *ctx, eth_tx_t *tx_obj) {
 }
 
 parser_error_t _validateTxEth() {
-    if (!validateERC20(&eth_tx_obj) && !app_mode_expert()) {
-        return parser_unsupported_tx;
+    if (!validateERC20(&eth_tx_obj) && !app_mode_blindsign()) {
+        return parser_blindsign_required;
     }
 
     return parser_ok;
@@ -351,11 +351,6 @@ static parser_error_t printWarningHash(const parser_context_t *ctx, uint8_t disp
 
     switch (displayIdx) {
         case 0:
-            snprintf(outKey, outKeyLen, "Warning:");
-            pageString(outVal, outValLen, "Blind-signing EVM Tx", pageIdx, pageCount);
-            break;
-
-        case 1:
             CHECK_ERROR(printEthHash(ctx, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount));
             break;
 
@@ -373,7 +368,7 @@ parser_error_t _getItemEth(const parser_context_t *ctx, uint8_t displayIdx, char
     }
 
     // Otherwise, check that ExpertMode is enabled
-    if (!app_mode_expert()) return parser_unsupported_tx;
+    if (!app_mode_blindsign()) return parser_blindsign_required;
 
     if (eth_tx_obj.tx_type == legacy) {
         CHECK_ERROR(printGeneric(ctx, displayIdx, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount));
@@ -400,7 +395,7 @@ parser_error_t _getNumItemsEth(uint8_t *numItems) {
     if (eth_tx_obj.tx_type == legacy) {
         *numItems = 5 + ((eth_tx_obj.legacy.data.rlpLen != 0) ? 1 : 0) + ((eth_tx_obj.legacy.to.rlpLen != 0) ? 1 : 0);
     } else {
-        *numItems = 2;
+        *numItems = 1;
     }
 
     return parser_ok;

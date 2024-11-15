@@ -35,9 +35,6 @@
 #include "view_internal.h"
 #include "zxmacros.h"
 
-static const char *msg_error1 = "Expert Mode";
-static const char *msg_error2 = "Required";
-
 static bool tx_initialized = false;
 
 void extractHDPath(uint32_t rx, uint32_t offset) {
@@ -323,9 +320,9 @@ __Z_INLINE void handleSignHash(volatile uint32_t *flags, volatile uint32_t *tx, 
         THROW(APDU_CODE_OK);
     }
 
-    if (!app_mode_expert()) {
+    if (!app_mode_blindsign()) {
         *flags |= IO_ASYNCH_REPLY;
-        view_custom_error_show(PIC(msg_error1), PIC(msg_error2));
+        view_blindsign_error_show();
         THROW(APDU_CODE_DATA_INVALID);
     }
 
@@ -350,14 +347,18 @@ __Z_INLINE void handleSignEth(volatile uint32_t *flags, volatile uint32_t *tx, u
     }
 
     CHECK_APP_CANARY()
-
-    const char *error_msg = tx_parse();
+    uint8_t error_code;
+    const char *error_msg = tx_parse(&error_code);
     CHECK_APP_CANARY()
 
     if (error_msg != NULL) {
         const int error_msg_length = strnlen(error_msg, sizeof(G_io_apdu_buffer));
         MEMCPY(G_io_apdu_buffer, error_msg, error_msg_length);
         *tx += (error_msg_length);
+        if (error_code == parser_blindsign_required) {
+            *flags |= IO_ASYNCH_REPLY;
+            view_blindsign_error_show();
+        }
         THROW(APDU_CODE_DATA_INVALID);
     }
 

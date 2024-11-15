@@ -69,7 +69,7 @@ uint32_t tx_get_buffer_length() { return buffering_get_buffer()->pos; }
 
 uint8_t *tx_get_buffer() { return buffering_get_buffer()->data; }
 
-const char *tx_parse() {
+const char *tx_parse(uint8_t *error_code) {
     MEMZERO(&tx_obj, sizeof(tx_obj));
 
     uint8_t err = parser_parse(&ctx_parsed_tx, tx_get_buffer(), tx_get_buffer_length(), &tx_obj);
@@ -81,6 +81,7 @@ const char *tx_parse() {
     }
 
     err = parser_validate(&ctx_parsed_tx);
+    *error_code = err;
     CHECK_APP_CANARY()
 
     if (err != parser_ok) {
