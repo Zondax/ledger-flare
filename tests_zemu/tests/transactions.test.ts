@@ -14,7 +14,7 @@
  *  limitations under the License.
  ******************************************************************************* */
 
-import Zemu from '@zondax/zemu'
+import Zemu, { ButtonKind, isTouchDevice, TouchNavigation } from '@zondax/zemu'
 import { FlareApp } from '@zondax/ledger-flare'
 import { models, hdpath, defaultOptions, ETH_PATH } from './common'
 import secp256k1 from 'secp256k1'
@@ -191,9 +191,6 @@ describe.each(models)('Transactions', function (m) {
       await sim.start({ ...defaultOptions, model: m.name })
       const app = new FlareApp(sim.getTransport())
 
-      //Change to expert mode so we can skip fields
-      await sim.toggleExpertMode()
-
       const responseAddr = await app.getAddressAndPubKey(hdpath)
       expect(responseAddr.returnCode).toEqual(0x9000)
       console.log(responseAddr)
@@ -201,12 +198,20 @@ describe.each(models)('Transactions', function (m) {
       const pubKeyRaw = new Uint8Array(responseAddr.compressed_pk!)
       const pubKey = secp256k1.publicKeyConvert(pubKeyRaw, true)
 
+      // Enable blind signing mode (this need to be fixed on zemu, as the current fn is not working anymore)
+      if (isTouchDevice(m.name)) {
+        const nav = new TouchNavigation(m.name, [ButtonKind.InfoButton, ButtonKind.ToggleSettingButton3, ButtonKind.SettingsQuitButton])
+        await sim.navigate('.', `${m.prefix.toLowerCase()}-sign_hashy`, nav.schedule, true, false, 0)
+      } else {
+        await sim.toggleBlindSigning()
+      }
+
       const text = 'FlareApp'
       const msg = Buffer.from(sha256(text), 'hex')
       const signatureRequest = app.signHash(hdpath, msg)
 
       await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
-      await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-sign-hash`)
+      await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-sign-hash`, true, 0, 1500, true)
 
       const signatureResponse = await signatureRequest
       console.log(signatureResponse)
