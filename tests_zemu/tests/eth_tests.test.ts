@@ -14,7 +14,7 @@
  *  limitations under the License.
  ******************************************************************************* */
 
-import Zemu, { ButtonKind, isTouchDevice } from '@zondax/zemu'
+import Zemu, { ButtonKind, isTouchDevice, TouchNavigation } from '@zondax/zemu'
 // @ts-ignore
 import { models, defaultOptions, ETH_PATH, EXPECTED_ETH_ADDRESS, EXPECTED_ETH_PK } from './common'
 import { ec } from 'elliptic'
@@ -33,14 +33,24 @@ type TestData = {
   nft_info: NftInfo | undefined
 }
 
-const SIGN_TEST_DATA = [
+const SIGN_TEST_DATA_CLEARSIGN = [
+  {
+    name: 'erc20_transfer',
+    op: Buffer.from(
+      'f86c80856d6e2edc00832dc6c0941d80c49bbbcd1c0911346656b529df9e5c2f783d8203e8b844a9059cbb000000000000000000000000b7784e5ad303d44067d2a6353441b784c226ccaf00000000000000000000000000000000000000000000000000000000075bca000e8080',
+      'hex',
+    ),
+  },
+]
+
+const SIGN_TEST_DATA_BLINDISIGN = [
   {
     name: 'transfer',
     op: Buffer.from(
       '02f782000e8402a8af41843b9aca00850d8c7b50e68303d090944a2962ac08962819a8a17661970e3c0db765565e8817addd0864728ae780c0',
       'hex',
     ),
-  }, // works
+  },
   {
     name: 'asset_transfer',
     op: Buffer.from(
@@ -80,20 +90,97 @@ const SIGN_TEST_DATA = [
       'hex',
     ),
   },
+  {
+    name: 'basic_transfer',
+    op: Buffer.from('e980856d6e2edc00832dc6c094df073477da421520cf03af261b782282c304ad6684abcdef00800e8080', 'hex'),
+  },
+  {
+    name: 'legacy_contract_deploy',
+    op: Buffer.from(
+      'f85a80856d6e2edc00832dc6c08084abcdef00b8441a8451e6000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000e8080',
+      'hex',
+    ),
+  },
+  {
+    name: 'legacy_contract_call',
+    op: Buffer.from(
+      'f84d80856d6e2edc00832dc6c09462650ae5c5777d1660cc17fcd4f48f6a66b9a4c284abcdef01a4ee919d5000000000000000000000000000000000000000000000000000000000000000010e8080',
+      'hex',
+    ),
+  },
+  {
+    name: 'basic_transfer_no_eip155',
+    op: Buffer.from('e980856d6e2edc00832dc6c094df073477da421520cf03af261b782282c304ad6684a1bcd400800e8080', 'hex'),
+  },
+  {
+    name: 'contract_deploy_no_eip155',
+    op: Buffer.from(
+      'f86c80856d6e2edc00832dc6c0941d80c49bbbcd1c0911346656b529df9e5c2f783d8203e8b844a9059cbb000000000000000000000000b7784e5ad303d44067d2a6353441b784c226ccaf00000000000000000000000000000000000000000000000000000000075bca000e8080',
+      'hex',
+    ),
+  },
+  {
+    name: 'undelegate_contract',
+    op: Buffer.from('ed80856d6e2edc00832dc6c094c67dce33d7a8efa5ffeb961899c73fe01bce92738203e886b302f39300010e8080', 'hex'),
+  },
+  {
+    name: 'deposit_dummy_contract',
+    op: Buffer.from('eb80856d6e2edc00832dc6c094c67dce33d7a8efa5ffeb961899c73fe01bce92738203e884b302f3930e8080', 'hex'),
+  },
 ]
 
 jest.setTimeout(90000)
 
 describe.each(models)('ETH', function (m) {
-  test.concurrent.each(SIGN_TEST_DATA)('sign transaction:  $name', async function (data) {
+  test.concurrent('get address', async function () {
+    const sim = new Zemu(m.path)
+    try {
+      await sim.start({ ...defaultOptions, model: m.name })
+      const app = new FlareApp(sim.getTransport())
+
+      const resp = await app.getEVMAddress(ETH_PATH, false, true)
+
+      console.log(resp)
+
+      console.log(resp.publicKey.toString())
+      console.log(resp.address)
+
+      expect(resp.publicKey.toString()).toEqual(EXPECTED_ETH_PK)
+      expect(resp.address.toString()).toEqual(EXPECTED_ETH_ADDRESS)
+    } finally {
+      await sim.close()
+    }
+  })
+
+  test.concurrent('show address', async function () {
+    const sim = new Zemu(m.path)
+    try {
+      await sim.start({
+        ...defaultOptions,
+        model: m.name,
+        approveKeyword: isTouchDevice(m.name) ? 'Confirm' : '',
+        approveAction: ButtonKind.ApproveTapButton,
+      })
+      const app = new FlareApp(sim.getTransport())
+
+      const resp = app.getEVMAddress(ETH_PATH, true, true)
+
+      await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
+
+      await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-show_eth_address`)
+
+      console.log(resp)
+    } finally {
+      await sim.close()
+    }
+  })
+
+  test.concurrent.each(SIGN_TEST_DATA_CLEARSIGN)('clear sign transaction:  $name', async function (data) {
     const sim = new Zemu(m.path)
     try {
       await sim.start({ ...defaultOptions, model: m.name })
       const app = new FlareApp(sim.getTransport())
       const msg = data.op
-
-      // Put the app in expert mode
-      await sim.toggleExpertMode()
 
       // eth pubkey used for ETH_PATH: "m/44'/60'/0'/0'/5"
       // to verify signature
@@ -125,47 +212,48 @@ describe.each(models)('ETH', function (m) {
       await sim.close()
     }
   })
-})
 
-describe('EthAddress', function () {
-  test.concurrent.each(models)('get address', async function (m) {
+  test.concurrent.each(SIGN_TEST_DATA_BLINDISIGN)('blind sign transaction:  $name', async function (data) {
     const sim = new Zemu(m.path)
     try {
       await sim.start({ ...defaultOptions, model: m.name })
       const app = new FlareApp(sim.getTransport())
+      const msg = data.op
 
-      const resp = await app.getEVMAddress(ETH_PATH, false, true)
+      // Enable blind signing mode (this need to be fixed on zemu, as the current fn is not working anymore)
+      if (isTouchDevice(m.name)) {
+        const nav = new TouchNavigation(m.name, [ButtonKind.InfoButton, ButtonKind.ToggleSettingButton3, ButtonKind.SettingsQuitButton])
+        await sim.navigate('.', `${m.prefix.toLowerCase()}-sign_${data.name}_legacy`, nav.schedule, true, false, 0)
+      } else {
+        await sim.toggleBlindSigning()
+      }
 
-      console.log(resp)
+      // eth pubkey used for ETH_PATH: "m/44'/60'/0'/0'/5"
+      // to verify signature
+      const EXPECTED_PUBLIC_KEY = '024f1dd50f180bfd546339e75410b127331469837fa618d950f7cfb8be351b0020'
 
-      console.log(resp.publicKey.toString())
-      console.log(resp.address)
-
-      expect(resp.publicKey.toString()).toEqual(EXPECTED_ETH_PK)
-      expect(resp.address.toString()).toEqual(EXPECTED_ETH_ADDRESS)
-    } finally {
-      await sim.close()
-    }
-  })
-
-  test.concurrent.each(models)('show address', async function (m) {
-    const sim = new Zemu(m.path)
-    try {
-      await sim.start({
-        ...defaultOptions,
-        model: m.name,
-        approveKeyword: isTouchDevice(m.name) ? 'Confirm' : '',
-        approveAction: ButtonKind.ApproveTapButton,
-      })
-      const app = new FlareApp(sim.getTransport())
-
-      const resp = app.getEVMAddress(ETH_PATH, true, true)
-
+      // do not wait here..
+      const signatureRequest = app.signEVMTransaction(ETH_PATH, msg, null)
+      // Wait until we are not in the main menu
       await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
 
-      await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-show_eth_address`)
+      await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-eth-${data.name}`, true, 0, 1500, true)
 
+      let resp = await signatureRequest
       console.log(resp)
+
+      const EC = new ec('secp256k1')
+      const msgHash = sha3.keccak256(msg)
+
+      const pubKey = Buffer.from(EXPECTED_PUBLIC_KEY, 'hex')
+      const signature_obj = {
+        r: Buffer.from(resp.r, 'hex'),
+        s: Buffer.from(resp.s, 'hex'),
+      }
+
+      // Verify signature
+      const signatureOK = EC.verify(msgHash, signature_obj, pubKey, 'hex')
+      expect(signatureOK).toEqual(true)
     } finally {
       await sim.close()
     }
