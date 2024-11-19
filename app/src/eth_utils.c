@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <zxmacros.h>
 
+#include "bignum.h"
 #include "coin.h"
 #include "rlp.h"
 #include "zxerror.h"
@@ -151,5 +152,37 @@ parser_error_t printEVMAddress(const rlp_t *address, char *outVal, uint16_t outV
     }
     pageString(outVal, outValLen, tmpBuffer, pageIdx, pageCount);
 
+    return parser_ok;
+}
+
+#define LESS_THAN_64_DIGIT(num_digit) \
+    if (num_digit > 64) return parser_value_out_of_range;
+
+__Z_INLINE bool format_quantity(const uint8_t *num, uint16_t num_len, uint8_t *bcd, uint16_t bcdSize, char *bignum,
+                                uint16_t bignumSize) {
+    bignumBigEndian_to_bcd(bcd, bcdSize, num, num_len);
+    return bignumBigEndian_bcdprint(bignum, bignumSize, bcd, bcdSize);
+}
+
+parser_error_t printBigIntFixedPoint(const uint8_t *number, uint16_t number_len, char *outVal, uint16_t outValLen,
+                                     uint8_t pageIdx, uint8_t *pageCount, uint16_t decimals) {
+    LESS_THAN_64_DIGIT(number_len);
+
+    char bignum[160] = {0};
+    union {
+        // overlapping arrays to avoid excessive stack usage. Do not use at the same time
+        uint8_t bcd[80];
+        char output[160];
+    } overlapped;
+
+    MEMZERO(&overlapped, sizeof(overlapped));
+
+    if (!format_quantity(number, number_len, overlapped.bcd, sizeof(overlapped.bcd), bignum, sizeof(bignum))) {
+        return parser_unexpected_value;
+    }
+
+    fpstr_to_str(overlapped.output, sizeof(overlapped.output), bignum, decimals);
+    number_inplace_trimming(overlapped.output, 1);
+    pageString(outVal, outValLen, overlapped.output, pageIdx, pageCount);
     return parser_ok;
 }

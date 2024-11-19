@@ -35,6 +35,8 @@ eth_tx_t eth_tx_obj;
 #define SONG_BIRD_CHAINID 19
 #define COSTON2_CHAINID 114
 #define DATA_BYTES_TO_PRINT 10
+#define TMP_DATA_ARRAY_SIZE 40
+#define ERC20_TRANSFER_OFFSET 4 + 12
 
 static parser_error_t readChainID(parser_context_t *ctx, rlp_t *chainId) {
     if (ctx == NULL || chainId == NULL) {
@@ -66,12 +68,12 @@ static parser_error_t parse_legacy_tx(parser_context_t *ctx, eth_tx_t *tx_obj) {
         return parser_unexpected_error;
     }
 
-    CHECK_ERROR(rlp_read(ctx, &tx_obj->legacy.nonce));
-    CHECK_ERROR(rlp_read(ctx, &(tx_obj->legacy.gasPrice)));
-    CHECK_ERROR(rlp_read(ctx, &(tx_obj->legacy.gasLimit)));
-    CHECK_ERROR(rlp_read(ctx, &(tx_obj->legacy.to)));
-    CHECK_ERROR(rlp_read(ctx, &(tx_obj->legacy.value)));
-    CHECK_ERROR(rlp_read(ctx, &(tx_obj->legacy.data)));
+    CHECK_ERROR(rlp_read(ctx, &tx_obj->tx.nonce));
+    CHECK_ERROR(rlp_read(ctx, &(tx_obj->tx.gasPrice)));
+    CHECK_ERROR(rlp_read(ctx, &(tx_obj->tx.gasLimit)));
+    CHECK_ERROR(rlp_read(ctx, &(tx_obj->tx.to)));
+    CHECK_ERROR(rlp_read(ctx, &(tx_obj->tx.value)));
+    CHECK_ERROR(rlp_read(ctx, &(tx_obj->tx.data)));
 
     // Check for legacy no EIP155 which means no chain_id
     // There is not more data no eip155 compliant tx
@@ -102,17 +104,45 @@ static parser_error_t parse_legacy_tx(parser_context_t *ctx, eth_tx_t *tx_obj) {
 }
 
 static parser_error_t parse_2930(parser_context_t *ctx, eth_tx_t *tx_obj) {
-    // the chain_id is the first field for this transaction
-    // later we can implement the parser for the other fields
+    if (ctx == NULL || tx_obj == NULL) {
+        return parser_unexpected_error;
+    }
     CHECK_ERROR(readChainID(ctx, &tx_obj->chainId));
+    CHECK_ERROR(rlp_read(ctx, &tx_obj->tx.nonce));
+    CHECK_ERROR(rlp_read(ctx, &(tx_obj->tx.gasPrice)));
+    CHECK_ERROR(rlp_read(ctx, &(tx_obj->tx.gasLimit)));
+    CHECK_ERROR(rlp_read(ctx, &(tx_obj->tx.to)));
+    CHECK_ERROR(rlp_read(ctx, &(tx_obj->tx.value)));
+    CHECK_ERROR(rlp_read(ctx, &(tx_obj->tx.data)));
+    CHECK_ERROR(rlp_read(ctx, &(tx_obj->tx.access_list)));
+
+    // R and S fields should be empty
+    if (ctx->offset < ctx->bufferLen) {
+        return parser_unexpected_characters;
+    }
 
     return parser_ok;
 }
 
 static parser_error_t parse_1559(parser_context_t *ctx, eth_tx_t *tx_obj) {
-    // the chain_id is the first field for this transaction
-    // later we can implement the parser for the other fields
+    if (ctx == NULL || tx_obj == NULL) {
+        return parser_unexpected_error;
+    }
+
     CHECK_ERROR(readChainID(ctx, &tx_obj->chainId));
+    CHECK_ERROR(rlp_read(ctx, &tx_obj->tx.nonce));
+    CHECK_ERROR(rlp_read(ctx, &(tx_obj->tx.max_priority_fee_per_gas)));
+    CHECK_ERROR(rlp_read(ctx, &(tx_obj->tx.max_fee_per_gas)));
+    CHECK_ERROR(rlp_read(ctx, &(tx_obj->tx.gasLimit)));
+    CHECK_ERROR(rlp_read(ctx, &(tx_obj->tx.to)));
+    CHECK_ERROR(rlp_read(ctx, &(tx_obj->tx.value)));
+    CHECK_ERROR(rlp_read(ctx, &(tx_obj->tx.data)));
+    CHECK_ERROR(rlp_read(ctx, &(tx_obj->tx.access_list)));
+
+    // R and S fields should be empty
+    if (ctx->offset < ctx->bufferLen) {
+        return parser_unexpected_characters;
+    }
 
     return parser_ok;
 }
@@ -212,59 +242,82 @@ static parser_error_t printERC20(const parser_context_t *ctx, uint8_t displayIdx
     MEMZERO(outVal, outValLen);
     *pageCount = 1;
 
-    char data_array[40] = {0};
+    if ((eth_tx_obj.tx_type == legacy || eth_tx_obj.tx_type == eip2930) && displayIdx >= 5) {
+        displayIdx += 2;
+    }
+
+    if (eth_tx_obj.tx_type == eip1559 && displayIdx >= 7) {
+        displayIdx++;
+    }
+
+    char data_array[TMP_DATA_ARRAY_SIZE] = {0};
     switch (displayIdx) {
         case 0:
             snprintf(outKey, outKeyLen, "Receiver");
-            rlp_t to = {.kind = RLP_KIND_STRING, .ptr = (eth_tx_obj.legacy.data.ptr + 4 + 12), .rlpLen = ETH_ADDRESS_LEN};
+            rlp_t to = {
+                .kind = RLP_KIND_STRING, .ptr = (eth_tx_obj.tx.data.ptr + ERC20_TRANSFER_OFFSET), .rlpLen = ETH_ADDRESS_LEN};
             CHECK_ERROR(printEVMAddress(&to, outVal, outValLen, pageIdx, pageCount));
             break;
 
         case 1:
             snprintf(outKey, outKeyLen, "Contract");
-            rlp_t contractAddress = {.kind = RLP_KIND_STRING, .ptr = eth_tx_obj.legacy.to.ptr, .rlpLen = ETH_ADDRESS_LEN};
+            rlp_t contractAddress = {.kind = RLP_KIND_STRING, .ptr = eth_tx_obj.tx.to.ptr, .rlpLen = ETH_ADDRESS_LEN};
             CHECK_ERROR(printEVMAddress(&contractAddress, outVal, outValLen, pageIdx, pageCount));
             break;
-
         case 2:
+            snprintf(outKey, outKeyLen, "Coin asset");
+            snprintf(outVal, outValLen, "flare");
+            break;
+
+        case 3:
             snprintf(outKey, outKeyLen, "Amount");
             CHECK_ERROR(printERC20Value(&eth_tx_obj, outVal, outValLen, pageIdx, pageCount));
             break;
 
-        case 3:
-            snprintf(outKey, outKeyLen, "Nonce");
-            CHECK_ERROR(printRLPNumber(&eth_tx_obj.legacy.nonce, outVal, outValLen, pageIdx, pageCount));
-            break;
-
         case 4:
-            snprintf(outKey, outKeyLen, "Gas price");
-            CHECK_ERROR(printRLPNumber(&eth_tx_obj.legacy.gasPrice, outVal, outValLen, pageIdx, pageCount));
+            snprintf(outKey, outKeyLen, "Nonce");
+            CHECK_ERROR(printRLPNumber(&eth_tx_obj.tx.nonce, outVal, outValLen, pageIdx, pageCount));
             break;
 
         case 5:
-            snprintf(outKey, outKeyLen, "Gas limit");
-            CHECK_ERROR(printRLPNumber(&eth_tx_obj.legacy.gasLimit, outVal, outValLen, pageIdx, pageCount));
+            snprintf(outKey, outKeyLen, "Max Priority Fee");
+            CHECK_ERROR(printRLPNumber(&eth_tx_obj.tx.max_priority_fee_per_gas, outVal, outValLen, pageIdx, pageCount));
             break;
 
         case 6:
-            snprintf(outKey, outKeyLen, "Value");
-            CHECK_ERROR(printRLPNumber(&eth_tx_obj.legacy.value, outVal, outValLen, pageIdx, pageCount));
+            snprintf(outKey, outKeyLen, "Max Fee");
+            CHECK_ERROR(printRLPNumber(&eth_tx_obj.tx.max_fee_per_gas, outVal, outValLen, pageIdx, pageCount));
             break;
 
         case 7:
+            snprintf(outKey, outKeyLen, "Gas price");
+            CHECK_ERROR(printRLPNumber(&eth_tx_obj.tx.gasPrice, outVal, outValLen, pageIdx, pageCount));
+            break;
+
+        case 8:
+            snprintf(outKey, outKeyLen, "Gas limit");
+            CHECK_ERROR(printRLPNumber(&eth_tx_obj.tx.gasLimit, outVal, outValLen, pageIdx, pageCount));
+            break;
+
+        case 9:
+            snprintf(outKey, outKeyLen, "Value");
+            CHECK_ERROR(printRLPNumber(&eth_tx_obj.tx.value, outVal, outValLen, pageIdx, pageCount));
+            break;
+
+        case 10:
             snprintf(outKey, outKeyLen, "Data");
             array_to_hexstr(
-                data_array, sizeof(data_array), eth_tx_obj.legacy.data.ptr,
-                eth_tx_obj.legacy.data.rlpLen > DATA_BYTES_TO_PRINT ? DATA_BYTES_TO_PRINT : eth_tx_obj.legacy.data.rlpLen);
+                data_array, sizeof(data_array), eth_tx_obj.tx.data.ptr,
+                eth_tx_obj.tx.data.rlpLen > DATA_BYTES_TO_PRINT ? DATA_BYTES_TO_PRINT : eth_tx_obj.tx.data.rlpLen);
 
-            if (eth_tx_obj.legacy.data.rlpLen > DATA_BYTES_TO_PRINT) {
+            if (eth_tx_obj.tx.data.rlpLen > DATA_BYTES_TO_PRINT) {
                 snprintf(data_array + (2 * DATA_BYTES_TO_PRINT), 4, "...");
             }
 
             pageString(outVal, outValLen, data_array, pageIdx, pageCount);
             break;
 
-        case 8:
+        case 11:
             CHECK_ERROR(printEthHash(ctx, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount));
             break;
 
@@ -284,52 +337,75 @@ static parser_error_t printGeneric(const parser_context_t *ctx, uint8_t displayI
     MEMZERO(outVal, outValLen);
     *pageCount = 1;
 
-    char data_array[40] = {0};
+    char data_array[TMP_DATA_ARRAY_SIZE] = {0};
 
-    if ((displayIdx >= 2 && eth_tx_obj.legacy.data.rlpLen == 0) || eth_tx_obj.legacy.to.rlpLen == 0) {
+    if ((displayIdx >= 3 && eth_tx_obj.tx.data.rlpLen == 0) || eth_tx_obj.tx.to.rlpLen == 0) {
         displayIdx += 1;
+    }
+
+    if (eth_tx_obj.tx_type == eip1559 && displayIdx >= 7) {
+        displayIdx++;
+    }
+
+    if ((eth_tx_obj.tx_type == legacy || eth_tx_obj.tx_type == eip2930) && displayIdx >= 4) {
+        displayIdx += 2;
     }
 
     switch (displayIdx) {
         case 0:
             snprintf(outKey, outKeyLen, "To");
-            rlp_t contractAddress = {.kind = RLP_KIND_STRING, .ptr = eth_tx_obj.legacy.to.ptr, .rlpLen = ETH_ADDRESS_LEN};
+            rlp_t contractAddress = {.kind = RLP_KIND_STRING, .ptr = eth_tx_obj.tx.to.ptr, .rlpLen = ETH_ADDRESS_LEN};
             CHECK_ERROR(printEVMAddress(&contractAddress, outVal, outValLen, pageIdx, pageCount));
             break;
         case 1:
+            snprintf(outKey, outKeyLen, "Coin asset");
+            snprintf(outVal, outValLen, "flare");
+            break;
+        case 2:
             snprintf(outKey, outKeyLen, "Value");
-            CHECK_ERROR(printRLPNumber(&eth_tx_obj.legacy.value, outVal, outValLen, pageIdx, pageCount));
+            printBigIntFixedPoint(eth_tx_obj.tx.value.ptr, eth_tx_obj.tx.value.rlpLen, outVal, outValLen, pageIdx, pageCount,
+                                  COIN_AMOUNT_DECIMAL);
             break;
 
-        case 2:
+        case 3:
             snprintf(outKey, outKeyLen, "Data");
             array_to_hexstr(
-                data_array, sizeof(data_array), eth_tx_obj.legacy.data.ptr,
-                eth_tx_obj.legacy.data.rlpLen > DATA_BYTES_TO_PRINT ? DATA_BYTES_TO_PRINT : eth_tx_obj.legacy.data.rlpLen);
+                data_array, sizeof(data_array), eth_tx_obj.tx.data.ptr,
+                eth_tx_obj.tx.data.rlpLen > DATA_BYTES_TO_PRINT ? DATA_BYTES_TO_PRINT : eth_tx_obj.tx.data.rlpLen);
 
-            if (eth_tx_obj.legacy.data.rlpLen > DATA_BYTES_TO_PRINT) {
+            if (eth_tx_obj.tx.data.rlpLen > DATA_BYTES_TO_PRINT) {
                 snprintf(data_array + (2 * DATA_BYTES_TO_PRINT), 4, "...");
             }
 
             pageString(outVal, outValLen, data_array, pageIdx, pageCount);
             break;
 
-        case 3:
-            snprintf(outKey, outKeyLen, "Gas price");
-            CHECK_ERROR(printRLPNumber(&eth_tx_obj.legacy.gasPrice, outVal, outValLen, pageIdx, pageCount));
-            break;
-
         case 4:
-            snprintf(outKey, outKeyLen, "Gas limit");
-            CHECK_ERROR(printRLPNumber(&eth_tx_obj.legacy.gasLimit, outVal, outValLen, pageIdx, pageCount));
+            snprintf(outKey, outKeyLen, "Max Priority Fee");
+            CHECK_ERROR(printRLPNumber(&eth_tx_obj.tx.max_priority_fee_per_gas, outVal, outValLen, pageIdx, pageCount));
             break;
 
         case 5:
-            snprintf(outKey, outKeyLen, "Nonce");
-            CHECK_ERROR(printRLPNumber(&eth_tx_obj.legacy.nonce, outVal, outValLen, pageIdx, pageCount));
+            snprintf(outKey, outKeyLen, "Max Fee");
+            CHECK_ERROR(printRLPNumber(&eth_tx_obj.tx.max_fee_per_gas, outVal, outValLen, pageIdx, pageCount));
             break;
 
         case 6:
+            snprintf(outKey, outKeyLen, "Gas limit");
+            CHECK_ERROR(printRLPNumber(&eth_tx_obj.tx.gasLimit, outVal, outValLen, pageIdx, pageCount));
+            break;
+
+        case 7:
+            snprintf(outKey, outKeyLen, "Gas price");
+            CHECK_ERROR(printRLPNumber(&eth_tx_obj.tx.gasPrice, outVal, outValLen, pageIdx, pageCount));
+            break;
+
+        case 8:
+            snprintf(outKey, outKeyLen, "Nonce");
+            CHECK_ERROR(printRLPNumber(&eth_tx_obj.tx.nonce, outVal, outValLen, pageIdx, pageCount));
+            break;
+
+        case 9:
             CHECK_ERROR(printEthHash(ctx, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount));
             break;
 
@@ -340,43 +416,16 @@ static parser_error_t printGeneric(const parser_context_t *ctx, uint8_t displayI
     return parser_ok;
 }
 
-static parser_error_t printWarningHash(const parser_context_t *ctx, uint8_t displayIdx, char *outKey, uint16_t outKeyLen,
-                                       char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount) {
-    if (outKey == NULL || outVal == NULL || pageCount == NULL) {
-        return parser_unexpected_error;
-    }
-    MEMZERO(outKey, outKeyLen);
-    MEMZERO(outVal, outValLen);
-    *pageCount = 1;
-
-    switch (displayIdx) {
-        case 0:
-            CHECK_ERROR(printEthHash(ctx, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount));
-            break;
-
-        default:
-            return parser_display_page_out_of_range;
-    }
-
-    return parser_ok;
-}
 parser_error_t _getItemEth(const parser_context_t *ctx, uint8_t displayIdx, char *outKey, uint16_t outKeyLen, char *outVal,
                            uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount) {
     // At the moment, clear signing is available only for ERC20
     if (validateERC20(&eth_tx_obj)) {
         return printERC20(ctx, displayIdx, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount);
+    } else if (app_mode_blindsign()) {
+        return printGeneric(ctx, displayIdx, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount);
     }
 
-    // Otherwise, check that ExpertMode is enabled
-    if (!app_mode_blindsign()) return parser_blindsign_required;
-
-    if (eth_tx_obj.tx_type == legacy) {
-        CHECK_ERROR(printGeneric(ctx, displayIdx, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount));
-    } else {
-        CHECK_ERROR(printWarningHash(ctx, displayIdx, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount));
-    }
-
-    return parser_ok;
+    return parser_blindsign_required;
 }
 
 // returns the number of items to display on the screen.
@@ -388,16 +437,15 @@ parser_error_t _getNumItemsEth(uint8_t *numItems) {
     }
     // Verify that tx is ERC20
     if (validateERC20(&eth_tx_obj)) {
-        *numItems = 9;
+        if (eth_tx_obj.tx_type == legacy || eth_tx_obj.tx_type == eip2930) {
+            *numItems = 10;
+        } else {
+            *numItems = 11;
+        }
         return parser_ok;
     }
 
-    if (eth_tx_obj.tx_type == legacy) {
-        *numItems = 5 + ((eth_tx_obj.legacy.data.rlpLen != 0) ? 1 : 0) + ((eth_tx_obj.legacy.to.rlpLen != 0) ? 1 : 0);
-    } else {
-        *numItems = 1;
-    }
-
+    *numItems = 6 + ((eth_tx_obj.tx.data.rlpLen != 0) ? 1 : 0) + ((eth_tx_obj.tx.to.rlpLen != 0) ? 1 : 0);
     return parser_ok;
 }
 

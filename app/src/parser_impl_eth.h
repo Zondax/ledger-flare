@@ -36,6 +36,13 @@ typedef struct {
     rlp_t to;
     rlp_t value;
     rlp_t data;
+
+    // eip1559
+    rlp_t max_priority_fee_per_gas;
+    rlp_t max_fee_per_gas;
+
+    // eip2930 & eip1559
+    rlp_t access_list;
 } eth_base_t;
 
 // EIP 2718 TransactionType
@@ -50,13 +57,8 @@ typedef enum {
 typedef struct {
     eth_tx_type_e tx_type;
     rlp_t chainId;
-    // lets use an anonymous
-    // union to hold the 3 possible types of transactions:
-    // legacy, eip2930, eip1559
-    union {
-        eth_base_t legacy;
-    };
-
+    eth_base_t tx;
+    bool is_erc20_transfer;
 } eth_tx_t;
 
 extern eth_tx_t eth_tx_obj;
