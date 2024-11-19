@@ -445,7 +445,14 @@ parser_error_t _getNumItemsEth(uint8_t *numItems) {
         return parser_ok;
     }
 
-    *numItems = 6 + ((eth_tx_obj.tx.data.rlpLen != 0) ? 1 : 0) + ((eth_tx_obj.tx.to.rlpLen != 0) ? 1 : 0);
+    if (eth_tx_obj.tx_type == legacy || eth_tx_obj.tx_type == eip2930) {
+        *numItems = 6;
+    } else {
+        *numItems = 7;
+    }
+
+    *numItems += ((eth_tx_obj.tx.data.rlpLen != 0) ? 1 : 0) + ((eth_tx_obj.tx.to.rlpLen != 0) ? 1 : 0);
+
     return parser_ok;
 }
 
