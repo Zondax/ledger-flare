@@ -63,12 +63,21 @@ std::vector<std::string> EVMGenerateExpectedUIOutput(const Json::Value &json, bo
     auto answer = std::vector<std::string>();
 
     ///
+    auto description = json["description"].asString();
     auto message = json["message"];
     auto receiver = message["Receiver"].asString();
     auto contract = message["Contract"].asString();
     auto amount = message["Amount"].asString();
     auto nonce = message["Nonce"].asString();
-    auto gasPrice = message["GasPrice"].asString();
+    auto maxFee = std::string();
+    auto maxPriorityFee = std::string();
+    auto gasPrice = std::string();
+    if (description.find("eip1559") != std::string::npos) {
+        maxFee = message["MaxFeePerGas"].asString();
+        maxPriorityFee = message["MaxPriorityFeePerGas"].asString();
+    } else {
+        gasPrice = message["GasPrice"].asString();
+    }
     auto gasLimit = message["GasLimit"].asString();
     auto value = message["Value"].asString();
     auto txhash = message["Eth-Hash"].asString();
@@ -84,13 +93,24 @@ std::vector<std::string> EVMGenerateExpectedUIOutput(const Json::Value &json, bo
     answer.insert(answer.end(), contractAddress.begin(), contractAddress.end());
 
     idx++;
+    addTo(answer, "{} | Coin asset : {}", idx, "flare");
+
+    idx++;
     addTo(answer, "{} | Amount : {}", idx, amount);
 
     idx++;
     addTo(answer, "{} | Nonce : {}", idx, nonce);
 
-    idx++;
-    addTo(answer, "{} | Gas price : {}", idx, gasPrice);
+    if (description.find("eip1559") != std::string::npos) {
+        idx++;
+        addTo(answer, "{} | Max Priority Fee : {}", idx, maxPriorityFee);
+        idx++;
+        addTo(answer, "{} | Max Fee : {}", idx, maxFee);
+    }
+    if (description.find("eip1559") == std::string::npos) {
+        idx++;
+        addTo(answer, "{} | Gas price : {}", idx, gasPrice);
+    }
 
     idx++;
     addTo(answer, "{} | Gas limit : {}", idx, gasLimit);
