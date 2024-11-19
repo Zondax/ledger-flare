@@ -39,6 +39,10 @@ parser_error_t parser_getItem(const parser_context_t *ctx, uint8_t displayIdx, c
                               char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount);
 
 parser_error_t parser_compute_eth_v(parser_context_t *ctx, unsigned int info, uint8_t *v);
+
+parser_error_t cleanOutput(char *outKey, uint16_t outKeyLen, char *outVal, uint16_t outValLen);
+
+parser_error_t checkSanity(uint8_t numItems, uint8_t displayIdx);
 #ifdef __cplusplus
 }
 #endif

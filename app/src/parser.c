@@ -96,14 +96,20 @@ parser_error_t parser_getNumItems(const parser_context_t *ctx, uint8_t *num_item
     return parser_ok;
 }
 
-static void cleanOutput(char *outKey, uint16_t outKeyLen, char *outVal, uint16_t outValLen) {
+parser_error_t cleanOutput(char *outKey, uint16_t outKeyLen, char *outVal, uint16_t outValLen) {
+    if (outKey == NULL || outVal == NULL || outKeyLen == 0 || outValLen == 0) {
+        return parser_no_data;
+    };
+
     MEMZERO(outKey, outKeyLen);
     MEMZERO(outVal, outValLen);
     snprintf(outKey, outKeyLen, "?");
     snprintf(outVal, outValLen, " ");
+
+    return parser_ok;
 }
 
-static parser_error_t checkSanity(uint8_t numItems, uint8_t displayIdx) {
+parser_error_t checkSanity(uint8_t numItems, uint8_t displayIdx) {
     if (displayIdx >= numItems) {
         return parser_display_idx_out_of_range;
     }
@@ -119,7 +125,7 @@ parser_error_t _getItemFlr(const parser_context_t *ctx, uint8_t displayIdx, char
     CHECK_APP_CANARY()
 
     CHECK_ERROR(checkSanity(numItems, displayIdx))
-    cleanOutput(outKey, outKeyLen, outVal, outValLen);
+    CHECK_ERROR(cleanOutput(outKey, outKeyLen, outVal, outValLen));
 
     switch (ctx->tx_obj->tx_type) {
         case p_export_tx:
