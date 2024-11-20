@@ -267,7 +267,7 @@ static parser_error_t printERC20(const parser_context_t *ctx, uint8_t displayIdx
             break;
         case 2:
             snprintf(outKey, outKeyLen, "Coin asset");
-            snprintf(outVal, outValLen, "flare");
+            snprintf(outVal, outValLen, "Flare");
             break;
 
         case 3:
@@ -360,7 +360,7 @@ static parser_error_t printGeneric(const parser_context_t *ctx, uint8_t displayI
             break;
         case 1:
             snprintf(outKey, outKeyLen, "Coin asset");
-            snprintf(outVal, outValLen, "flare");
+            snprintf(outVal, outValLen, "Flare");
             break;
         case 2:
             snprintf(outKey, outKeyLen, "Value");
