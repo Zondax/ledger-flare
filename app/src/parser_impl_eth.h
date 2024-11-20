@@ -58,7 +58,7 @@ typedef struct {
     eth_tx_type_e tx_type;
     rlp_t chainId;
     eth_base_t tx;
-    bool is_erc20_transfer;
+
 } eth_tx_t;
 
 extern eth_tx_t eth_tx_obj;

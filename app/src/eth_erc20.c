@@ -97,9 +97,7 @@ bool validateERC20(eth_tx_t *ethObj) {
     if (ethObj == NULL || ethObj->tx.to.rlpLen != ETH_ADDRESS_LEN || ethObj->tx.data.ptr == NULL ||
         ethObj->tx.data.rlpLen != ERC20_DATA_LENGTH ||
         memcmp(ethObj->tx.data.ptr, ERC20_TRANSFER_PREFIX, sizeof(ERC20_TRANSFER_PREFIX)) != 0) {
-        ethObj->is_erc20_transfer = false;
         return false;
     }
-    ethObj->is_erc20_transfer = true;
     return true;
 }
