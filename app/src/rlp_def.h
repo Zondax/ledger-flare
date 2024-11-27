@@ -54,6 +54,7 @@ typedef struct {
     rlp_kind_e kind;
     const uint8_t *ptr;
     uint64_t rlpLen;
+    uint64_t chain_id_decoded;
 } rlp_t;
 
 #ifdef __cplusplus

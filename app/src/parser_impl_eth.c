@@ -61,6 +61,8 @@ static parser_error_t readChainID(parser_context_t *ctx, rlp_t *chainId) {
         return parser_invalid_chain_id;
     }
 
+    chainId->chain_id_decoded = tmpChainId;
+
     return parser_ok;
 }
 
@@ -267,7 +269,22 @@ static parser_error_t printERC20(const parser_context_t *ctx, uint8_t displayIdx
             break;
         case 2:
             snprintf(outKey, outKeyLen, "Coin asset");
-            snprintf(outVal, outValLen, "Flare");
+            switch (eth_tx_obj.chainId.chain_id_decoded) {
+                case FLARE_MAINNET_CHAINID:
+                    snprintf(outVal, outValLen, "Flare");
+                    break;
+                case COSTON_CHAINID:
+                    snprintf(outVal, outValLen, "Coston Flare");
+                    break;
+                case SONG_BIRD_CHAINID:
+                    snprintf(outVal, outValLen, "Songbird");
+                    break;
+                case COSTON2_CHAINID:
+                    snprintf(outVal, outValLen, "Coston2 Flare");
+                    break;
+                default:
+                    return parser_invalid_chain_id;
+            }
             break;
 
         case 3:
