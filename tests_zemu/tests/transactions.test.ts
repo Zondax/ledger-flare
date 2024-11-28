@@ -199,12 +199,7 @@ describe.each(models)('Transactions', function (m) {
       const pubKey = secp256k1.publicKeyConvert(pubKeyRaw, true)
 
       // Enable blind signing mode (this need to be fixed on zemu, as the current fn is not working anymore)
-      if (isTouchDevice(m.name)) {
-        const nav = new TouchNavigation(m.name, [ButtonKind.InfoButton, ButtonKind.ToggleSettingButton3, ButtonKind.SettingsQuitButton])
-        await sim.navigate('.', `${m.prefix.toLowerCase()}-sign_hashy`, nav.schedule, true, false, 0)
-      } else {
-        await sim.toggleBlindSigning()
-      }
+      await sim.toggleBlindSigning()
 
       const text = 'FlareApp'
       const msg = Buffer.from(sha256(text), 'hex')
