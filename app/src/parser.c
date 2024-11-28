@@ -23,6 +23,7 @@
 #include <zxtypes.h>
 
 #include "apdu_codes.h"
+#include "app_mode.h"
 #include "coin.h"
 #include "crypto.h"
 #include "crypto_helper.h"
@@ -50,6 +51,7 @@ parser_error_t parser_parse(parser_context_t *ctx, const uint8_t *data, size_t d
         case flr_tx: {
             CHECK_ERROR(parser_init_context(ctx, data, dataLen))
             ctx->tx_obj = tx_obj;
+            app_mode_skip_blindsign_ui();
             return _read(ctx, tx_obj);
         }
         case eth_tx: {

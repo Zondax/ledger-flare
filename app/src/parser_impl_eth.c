@@ -210,7 +210,12 @@ parser_error_t _readEth(parser_context_t *ctx, eth_tx_t *tx_obj) {
 }
 
 parser_error_t _validateTxEth() {
-    if (!validateERC20(&eth_tx_obj) && !app_mode_blindsign()) {
+    // If there is no data or erc20 transfer we will be able to print everything no blindsign required
+    if (eth_tx_obj.tx.data.rlpLen == 0 || validateERC20(&eth_tx_obj)) {
+        app_mode_skip_blindsign_ui();
+        return parser_ok;
+    } else if (!app_mode_blindsign()) {  // If it is not an ERC20 transfer or data is empty require blindsinging if not
+                                         // enable
         return parser_blindsign_required;
     }
 
@@ -446,7 +451,7 @@ parser_error_t _getItemEth(const parser_context_t *ctx, uint8_t displayIdx, char
     // At the moment, clear signing is available only for ERC20
     if (validateERC20(&eth_tx_obj)) {
         return printERC20(ctx, displayIdx, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount);
-    } else if (app_mode_blindsign()) {
+    } else {
         return printGeneric(ctx, displayIdx, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount);
     }
 
