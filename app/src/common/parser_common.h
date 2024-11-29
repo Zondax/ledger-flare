@@ -73,17 +73,11 @@ typedef enum {
     parser_invalid_chain_id,
 } parser_error_t;
 
-typedef enum {
-    flr_tx = 0,
-    eth_tx,
-} tx_type_t;
-
 typedef struct {
     const uint8_t *buffer;
     uint16_t bufferLen;
     uint16_t offset;
     parser_tx_t *tx_obj;
-    tx_type_t tx_type;
 } parser_context_t;
 
 #ifdef __cplusplus

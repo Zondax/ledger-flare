@@ -21,6 +21,7 @@
 #include "apdu_codes.h"
 #include "coin.h"
 #include "crypto.h"
+#include "crypto_eth.h"
 #include "tx.h"
 #include "zxerror.h"
 
