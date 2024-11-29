@@ -14,11 +14,13 @@
  *  limitations under the License.
  ********************************************************************************/
 
+#include "eth_addr.h"
+
 #include <stdio.h>
 
 #include "app_mode.h"
 #include "coin.h"
-#include "crypto.h"
+#include "crypto_eth.h"
 #include "zxerror.h"
 #include "zxformat.h"
 #include "zxmacros.h"
@@ -50,7 +52,7 @@ zxerr_t eth_addr_getItem(int8_t displayIdx, char *outKey, uint16_t outKeyLen, ch
             }
 
             snprintf(outKey, outKeyLen, "Path");
-            bip32_to_str(buffer, sizeof(buffer), hdPath, hdPath_len);
+            bip32_to_str(buffer, sizeof(buffer), hdPathEth, hdPathEth_len);
             pageString(outVal, outValLen, buffer, pageIdx, pageCount);
             return zxerr_ok;
         }

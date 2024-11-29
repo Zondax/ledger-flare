@@ -102,7 +102,7 @@ parser_error_t rlp_readList(const rlp_t *list, rlp_t *fields, uint16_t *listFiel
         return parser_unexpected_error;
     }
 
-    parser_context_t ctx = {.buffer = list->ptr, .bufferLen = list->rlpLen, .offset = 0, .tx_type = eth_tx};
+    parser_context_t ctx = {.buffer = list->ptr, .bufferLen = list->rlpLen, .offset = 0};
     return rlp_parseStream(&ctx, fields, listFields, maxFields);
 }
 
@@ -126,7 +126,7 @@ parser_error_t rlp_readUInt256(const rlp_t *rlp, uint256_t *value) {
             return parser_unexpected_type;
     }
 
-    parser_context_t ctx = {.buffer = tmpBuffer, .bufferLen = sizeof(tmpBuffer), .offset = 0, .tx_type = eth_tx};
+    parser_context_t ctx = {.buffer = tmpBuffer, .bufferLen = sizeof(tmpBuffer), .offset = 0};
     CHECK_ERROR(readu256BE(&ctx, value));
     return parser_ok;
 }

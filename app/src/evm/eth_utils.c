@@ -19,7 +19,7 @@
 #include <zxmacros.h>
 
 #include "bignum.h"
-#include "coin.h"
+#include "coin_eth.h"
 #include "rlp.h"
 #include "zxerror.h"
 #include "zxformat.h"

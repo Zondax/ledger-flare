@@ -21,10 +21,9 @@
 
 #include "app_mode.h"
 #include "common/parser_common.h"
-#include "crypto_helper.h"
+#include "crypto_eth.h"
 #include "eth_erc20.h"
 #include "eth_utils.h"
-#include "parser.h"
 #include "parser_txdef.h"
 #include "rlp.h"
 #include "uint256.h"
@@ -192,7 +191,7 @@ parser_error_t _readEth(parser_context_t *ctx, eth_tx_t *tx_obj) {
         return parser_unexpected_characters;
     }
 
-    parser_context_t txCtx = {.buffer = list.ptr, .bufferLen = list.rlpLen, .offset = 0, .tx_type = eth_tx};
+    parser_context_t txCtx = {.buffer = list.ptr, .bufferLen = list.rlpLen, .offset = 0};
     switch (tx_obj->tx_type) {
         case eip1559: {
             return parse_1559(&txCtx, tx_obj);
@@ -214,7 +213,7 @@ parser_error_t _validateTxEth() {
     if (eth_tx_obj.tx.data.rlpLen == 0 || validateERC20(&eth_tx_obj)) {
         app_mode_skip_blindsign_ui();
         return parser_ok;
-    } else if (!app_mode_blindsign()) {  // If it is not an ERC20 transfer or data is empty require blindsinging if not
+    } else if (!app_mode_blindsign()) {  // If it is not an ERC20 transfer or data is not empty require blindsinging if not
                                          // enable
         return parser_blindsign_required;
     }
@@ -441,14 +440,7 @@ static parser_error_t printGeneric(const parser_context_t *ctx, uint8_t displayI
 
 parser_error_t _getItemEth(const parser_context_t *ctx, uint8_t displayIdx, char *outKey, uint16_t outKeyLen, char *outVal,
                            uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount) {
-    uint8_t numItems = 0;
-    CHECK_ERROR(_getNumItemsEth(&numItems))
-    CHECK_APP_CANARY()
-
-    CHECK_ERROR(checkSanity(numItems, displayIdx))
-    CHECK_ERROR(cleanOutput(outKey, outKeyLen, outVal, outValLen));
-
-    // At the moment, clear signing is available only for ERC20
+    // At the moment, clear signing is available only for ERC20 and transaction with empty data
     if (validateERC20(&eth_tx_obj)) {
         return printERC20(ctx, displayIdx, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount);
     } else {

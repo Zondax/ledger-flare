@@ -69,7 +69,7 @@ parser_error_t printERC20Value(const eth_tx_t *ethObj, char *outVal, uint16_t ou
 
     uint256_t value = {0};
     const uint8_t *valuePtr = ethObj->tx.data.ptr + SELECTOR_LENGTH + BIGINT_LENGTH;
-    parser_context_t tmpCtx = {.buffer = valuePtr, .bufferLen = BIGINT_LENGTH, .offset = 0, .tx_type = eth_tx};
+    parser_context_t tmpCtx = {.buffer = valuePtr, .bufferLen = BIGINT_LENGTH, .offset = 0};
     CHECK_ERROR(readu256BE(&tmpCtx, &value));
 
     char bufferUI[100] = {0};
