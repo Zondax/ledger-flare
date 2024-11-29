@@ -37,6 +37,8 @@ eth_tx_t eth_tx_obj;
 #define DATA_BYTES_TO_PRINT 10
 #define TMP_DATA_ARRAY_SIZE 40
 #define ERC20_TRANSFER_OFFSET 4 + 12
+#define ETHEREUM_RECOVERY_OFFSET 27
+#define EIP155_V_BASE 35
 
 static parser_error_t readChainID(parser_context_t *ctx, rlp_t *chainId) {
     if (ctx == NULL || chainId == NULL) {
@@ -484,8 +486,10 @@ parser_error_t _computeV(parser_context_t *ctx, eth_tx_t *tx_obj, unsigned int i
     }
 
     uint8_t parity = (info & CX_ECCINFO_PARITY_ODD) == 1;
+
+    /// No chain id in the transaction use ETHEREUM_RECOVERY_OFFSET
     if (personal_msg) {
-        *v = 27 + parity;
+        *v = ETHEREUM_RECOVERY_OFFSET + parity;
         return parser_ok;
     }
 
@@ -504,7 +508,7 @@ parser_error_t _computeV(parser_context_t *ctx, eth_tx_t *tx_obj, unsigned int i
         CHECK_ERROR(be_bytes_to_u64(tx_obj->chainId.ptr, tx_obj->chainId.rlpLen, &id));
     }
 
-    uint32_t cv = 35 + parity;
+    uint32_t cv = EIP155_V_BASE + parity;
     cv = saturating_add_u32(cv, (uint32_t)id * 2);
     *v = (uint8_t)cv;
 

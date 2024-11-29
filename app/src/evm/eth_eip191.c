@@ -86,7 +86,7 @@ parser_error_t eip191_msg_parse() {
     // or first char is not printable.
     if (messageLength > 0 && (npc * 100) / messageLength >= 40 && !app_mode_blindsign()) {
         return parser_blindsign_required;
-    } else if ((npc * 100) / messageLength < 40) {
+    } else if (messageLength > 0 && (npc * 100) / messageLength < 40) {
         app_mode_skip_blindsign_ui();
     }
 

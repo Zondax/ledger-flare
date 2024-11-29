@@ -19,6 +19,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#include <stdbool.h>
 
 #include "parser_impl.h"
 

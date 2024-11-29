@@ -14,7 +14,7 @@
  *  limitations under the License.
  ******************************************************************************* */
 import Zemu, { ButtonKind, isTouchDevice } from '@zondax/zemu'
-import { SeiApp } from '@zondax/ledger-sei'
+import { FlareApp } from '@zondax/ledger-flare'
 import { ETH_PATH, EXPECTED_ETH_ADDRESS, EXPECTED_ETH_PK, defaultOptions, models } from './common'
 import { ec } from 'elliptic'
 jest.setTimeout(90000)
@@ -23,10 +23,17 @@ const SIGN_TEST_DATA = [
   {
     name: 'personal_sign_msg',
     message: Buffer.from('Hello World!', 'utf8'),
+    blind: false,
   },
   {
     name: 'personal_sign_big_msg',
     message: Buffer.from('Just a big dummy message to be sign. To test if ew are parsing the chunks in the right way. By: Zondax', 'utf8'),
+    blind: false,
+  },
+  {
+    name: 'personal_sign_non_printable_msg',
+    message: Buffer.from('\x00\x00\x00\x00\x00zx', 'utf8'),
+    blind: true,
   },
 ]
 describe.each(models)('EIP191', function (m) {
@@ -34,15 +41,17 @@ describe.each(models)('EIP191', function (m) {
     const sim = new Zemu(m.path)
     try {
       await sim.start({ ...defaultOptions, model: m.name })
-      const app = new SeiApp(sim.getTransport())
+      const app = new FlareApp(sim.getTransport())
       const msgData = data.message
 
-      await sim.toggleBlindSigning()
+      if (data.blind) {
+        await sim.toggleBlindSigning()
+      }
       // do not wait here..
       const signatureRequest = app.signPersonalMessage(ETH_PATH, msgData.toString('hex'))
       // Wait until we are not in the main menu
       await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
-      await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-eth-${data.name}`)
+      await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-eth-${data.name}`, true, 0, 1500, data.blind)
       let resp = await signatureRequest
       console.log(resp)
       const header = Buffer.from('\x19Ethereum Signed Message:\n', 'utf8')
