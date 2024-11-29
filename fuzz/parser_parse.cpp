@@ -22,7 +22,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     parser_context_t ctx;
     parser_error_t rc;
 
-    ctx.tx_type = flr_tx;
     rc = parser_parse(&ctx, data, size, &txObj);
     if (rc != parser_ok) {
         return 0;
