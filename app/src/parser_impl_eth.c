@@ -500,24 +500,17 @@ parser_error_t _computeV(parser_context_t *ctx, eth_tx_t *tx_obj, unsigned int i
     }
 
     // we need chainID info
+    // https://github.com/LedgerHQ/ledger-live/commit/b93a421866519b80fdd8a029caea97323eceae93
+    uint64_t id = 0;
     if (tx_obj->chainId.rlpLen == 0) {
-        // according to app-ethereum this is the legacy non eip155 conformant
-        // so V should be made before EIP155 which had
-        // 27 + {0, 1}
-        // 27, decided by the parity of Y
-        // see https://bitcoin.stackexchange.com/a/112489
-        //     https://ethereum.stackexchange.com/a/113505
-        //     https://eips.ethereum.org/EIPS/eip-155
-        *v = 27 + parity;
-
+        id = tx_obj->chainId.ptr[0];
     } else {
-        uint64_t id = 0;
         CHECK_ERROR(be_bytes_to_u64(tx_obj->chainId.ptr, tx_obj->chainId.rlpLen, &id));
-
-        uint32_t cv = 35 + parity;
-        cv = saturating_add_u32(cv, (uint32_t)id * 2);
-        *v = (uint8_t)cv;
     }
+
+    uint32_t cv = 35 + parity;
+    cv = saturating_add_u32(cv, (uint32_t)id * 2);
+    *v = (uint8_t)cv;
 
     return parser_ok;
 }
