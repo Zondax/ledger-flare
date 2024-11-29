@@ -22,7 +22,7 @@
 /// Parse message stored in transaction buffer
 /// This function should be called as soon as full buffer data is loaded.
 /// \return It returns NULL if data is valid or error message otherwise.
-const char *tx_parse_eth();
+const char *tx_parse_eth(uint8_t *error_code);
 
 /// Return the number of items in the transaction
 zxerr_t tx_getNumItemsEth(uint8_t *num_items);
