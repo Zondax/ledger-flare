@@ -22,7 +22,7 @@ extern "C" {
 
 void handleGetAddrEth(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx);
 void handleSignEth(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx);
-
+void handleSignEip191(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx);
 #ifdef __cplusplus
 }
 #endif

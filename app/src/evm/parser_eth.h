@@ -38,7 +38,7 @@ parser_error_t parser_getNumItemsEth(const parser_context_t *ctx, uint8_t *num_i
 parser_error_t parser_getItemEth(const parser_context_t *ctx, uint8_t displayIdx, char *outKey, uint16_t outKeyLen,
                                  char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount);
 
-parser_error_t parser_compute_eth_v(parser_context_t *ctx, unsigned int info, uint8_t *v);
+parser_error_t parser_compute_eth_v(parser_context_t *ctx, unsigned int info, uint8_t *v, bool personal_msg);
 #ifdef __cplusplus
 }
 #endif

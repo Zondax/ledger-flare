@@ -139,13 +139,17 @@ catch_cx_error:
 
 // Sign an ethereum related transaction
 zxerr_t crypto_sign_eth(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *message, uint16_t messageLen,
-                        uint16_t *sigSize) {
+                        uint16_t *sigSize, bool personal_msg) {
     if (buffer == NULL || message == NULL || sigSize == NULL || signatureMaxlen < sizeof(signature_t)) {
         return zxerr_invalid_crypto_settings;
     }
 
     uint8_t message_digest[KECCAK_256_SIZE] = {0};
-    CHECK_ZXERR(keccak_digest(message, messageLen, message_digest, KECCAK_256_SIZE))
+    if (!personal_msg) {
+        CHECK_ZXERR(keccak_digest(message, messageLen, message_digest, KECCAK_256_SIZE))
+    } else {
+        MEMCPY(message_digest, message, messageLen);
+    }
 
     unsigned int info = 0;
     zxerr_t error = _sign(buffer, signatureMaxlen, message_digest, KECCAK_256_SIZE, sigSize, &info);
@@ -155,7 +159,7 @@ zxerr_t crypto_sign_eth(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t
 
     // we need to fix V
     uint8_t v = 0;
-    error = tx_compute_eth_v(info, &v);
+    error = tx_compute_eth_v(info, &v, personal_msg);
 
     if (error != zxerr_ok) return zxerr_invalid_crypto_settings;
 

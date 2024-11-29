@@ -69,6 +69,6 @@ parser_error_t parser_getItemEth(const parser_context_t *ctx, uint8_t displayIdx
     return _getItemEth(ctx, displayIdx, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount);
 }
 
-parser_error_t parser_compute_eth_v(parser_context_t *ctx, unsigned int info, uint8_t *v) {
-    return _computeV(ctx, &eth_tx_obj, info, v);
+parser_error_t parser_compute_eth_v(parser_context_t *ctx, unsigned int info, uint8_t *v, bool personal_msg) {
+    return _computeV(ctx, &eth_tx_obj, info, v, personal_msg);
 }

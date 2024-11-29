@@ -21,6 +21,7 @@
 #include "coin_eth.h"
 #include "crypto_eth.h"
 #include "eth_addr.h"
+#include "eth_eip191.h"
 #include "eth_utils.h"
 #include "tx_eth.h"
 #include "view.h"
@@ -57,6 +58,67 @@ void extract_eth_path(uint32_t rx, uint32_t offset) {
 
     // set the hdPath len
     hdPathEth_len = path_len;
+}
+
+uint32_t bytes_to_read;
+bool process_chunk_eip191(__Z_UNUSED volatile uint32_t *tx, uint32_t rx) {
+    const uint8_t payloadType = G_io_apdu_buffer[OFFSET_PAYLOAD_TYPE];
+    if (G_io_apdu_buffer[OFFSET_P2] != 0) {
+        THROW(APDU_CODE_INVALIDP1P2);
+    }
+    if (rx < OFFSET_DATA) {
+        THROW(APDU_CODE_WRONG_LENGTH);
+    }
+    uint8_t *data = &(G_io_apdu_buffer[OFFSET_DATA]);
+    uint32_t len = rx - OFFSET_DATA;
+    uint64_t added;
+    switch (payloadType) {
+        case P1_ETH_FIRST:
+            tx_initialize();
+            tx_reset();
+            extract_eth_path(rx, OFFSET_DATA);
+            // there is not warranties that the first chunk
+            // contains the serialized path only;
+            // so we need to offset the data to point to the first transaction
+            // byte
+            uint32_t path_len = sizeof(uint32_t) * hdPathEth_len;
+            // plus the first offset data containing the path len
+            data += path_len + 1;
+            if (len < path_len) {
+                THROW(APDU_CODE_WRONG_LENGTH);
+            }
+            len -= path_len + 1;
+            // now process the chunk
+            bytes_to_read = U4BE(data, 0);
+            bytes_to_read -= len - sizeof(uint32_t);
+            added = tx_append(data, len);
+            if (added != len) {
+                THROW(APDU_CODE_OUTPUT_BUFFER_TOO_SMALL);
+            }
+            tx_initialized = true;
+            if (bytes_to_read == 0) {
+                tx_initialized = false;
+                return true;
+            }
+            return false;
+        case P1_ETH_MORE:
+            if (!tx_initialized) {
+                THROW(APDU_CODE_TX_NOT_INITIALIZED);
+            }
+            // either the entire buffer of the remaining bytes we expect
+            bytes_to_read -= len;
+            added = tx_append(data, len);
+            if (added != len) {
+                THROW(APDU_CODE_OUTPUT_BUFFER_TOO_SMALL);
+            }
+            // check if this chunk was the last one
+            if (bytes_to_read == 0) {
+                tx_initialized = false;
+                return true;
+            }
+            return false;
+    }
+    THROW(APDU_CODE_INVALIDP1P2);
 }
 
 bool process_chunk_eth(__Z_UNUSED volatile uint32_t *tx, uint32_t rx) {
@@ -206,6 +268,24 @@ void handleSignEth(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
 
     CHECK_APP_CANARY()
     view_review_init(tx_getItemEth, tx_getNumItemsEth, app_sign_eth);
+    view_review_show(REVIEW_TXN);
+    *flags |= IO_ASYNCH_REPLY;
+}
+
+void handleSignEip191(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
+    zemu_log_stack("handleSignEip191");
+    if (!process_chunk_eip191(tx, rx)) {
+        THROW(APDU_CODE_OK);
+    }
+    CHECK_APP_CANARY()
+    parser_error_t err = eip191_msg_parse();
+    if (err == parser_blindsign_required) {
+        *flags |= IO_ASYNCH_REPLY;
+        view_blindsign_error_show();
+        THROW(APDU_CODE_DATA_INVALID);
+    }
+    CHECK_APP_CANARY()
+    view_review_init(eip191_msg_getItem, eip191_msg_getNumItems, app_sign_eip191);
     view_review_show(REVIEW_TXN);
     *flags |= IO_ASYNCH_REPLY;
 }

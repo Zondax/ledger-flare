@@ -478,14 +478,18 @@ parser_error_t _getNumItemsEth(uint8_t *numItems) {
     return parser_ok;
 }
 
-parser_error_t _computeV(parser_context_t *ctx, eth_tx_t *tx_obj, unsigned int info, uint8_t *v) {
+parser_error_t _computeV(parser_context_t *ctx, eth_tx_t *tx_obj, unsigned int info, uint8_t *v, bool personal_msg) {
     if (ctx == NULL || tx_obj == NULL || v == NULL) {
         return parser_unexpected_error;
     }
 
-    uint8_t type = eth_tx_obj.tx_type;
     uint8_t parity = (info & CX_ECCINFO_PARITY_ODD) == 1;
+    if (personal_msg) {
+        *v = 27 + parity;
+        return parser_ok;
+    }
 
+    uint8_t type = eth_tx_obj.tx_type;
     if (type == eip2930 || type == eip1559) {
         *v = parity;
         return parser_ok;

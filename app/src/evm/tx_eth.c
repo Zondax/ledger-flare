@@ -46,8 +46,8 @@ const char *tx_parse_eth(uint8_t *error_code) {
     return NULL;
 }
 
-zxerr_t tx_compute_eth_v(unsigned int info, uint8_t *v) {
-    parser_error_t err = parser_compute_eth_v(&ctx_parsed_tx, info, v);
+zxerr_t tx_compute_eth_v(unsigned int info, uint8_t *v, bool personal_msg) {
+    parser_error_t err = parser_compute_eth_v(&ctx_parsed_tx, info, v, personal_msg);
 
     if (err != parser_ok) return zxerr_unknown;
 
