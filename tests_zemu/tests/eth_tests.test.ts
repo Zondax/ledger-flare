@@ -140,6 +140,19 @@ const SIGN_TEST_DATA = [
     op: Buffer.from('eb80856d6e2edc00832dc6c094c67dce33d7a8efa5ffeb961899c73fe01bce92738203e884b302f3930e8080', 'hex'),
     blindsign_required: true,
   },
+  {
+    name: 'deposit_dummy_contract_coston_network',
+    op: Buffer.from('eb80856d6e2edc00832dc6c094c67dce33d7a8efa5ffeb961899c73fe01bce92738203e884b302f393108080', 'hex'),
+    blindsign_required: true,
+  },
+  {
+    name: 'erc20_transfer_coston_network',
+    op: Buffer.from(
+      'f86c80856d6e2edc00832dc6c0941d80c49bbbcd1c0911346656b529df9e5c2f783d8203e8b844a9059cbb000000000000000000000000b7784e5ad303d44067d2a6353441b784c226ccaf00000000000000000000000000000000000000000000000000000000075bca00108080',
+      'hex',
+    ),
+    blindsign_required: false,
+  },
 ]
 
 jest.setTimeout(90000)
