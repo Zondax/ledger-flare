@@ -285,6 +285,8 @@ All other packets/chunks contain data chunks that are described below
 | SIG     | byte (65) | Signature   |                          |
 | SW1-SW2 | byte (2)  | Return code | see list of return codes |
 
+---
+
 ### INS_SIGN_PERSONAL_MESSAGE
 
 #### Command
@@ -294,7 +296,7 @@ All other packets/chunks contain data chunks that are described below
 | CLA   | byte (1) | Application Identifier | 0xE0      |
 | INS   | byte (1) | Instruction ID         | 0x08      |
 | P1    | byte (1) | Payload desc           | 0x0 = first  |
-|       |          |                        | 0x8 = more   |
+|       |          |                        | 0x80 = more   |
 |       |          |                        |   |
 | P2    | byte (1) | ----                   | not used  |
 | L     | byte (1) | Bytes in the payload       | (depends) |
@@ -312,14 +314,14 @@ All other packets/chunks contain data chunks that are described below
 | Path[2] | byte (4) | Derivation Path Data | ?        |
 | Path[3] | byte (4) | Derivation Path Data | ?        |
 | Path[4] | byte (4) | Derivation Path Data | ?        |
-| Msg size| byte (4) | Message to sign size | ?        |
-| Msg | bytes... | Message to Sign |          |
+| Msg size| byte (4) | Size of msg to sign | ?        |
+| Msg | bytes... | Msg to Sign |          |
 
 ##### Other Chunks/Packets
 
 | Field   | Type     | Content         | Expected |
 | ------- | -------- | --------------- | -------- |
-| Msg | bytes... | Message to Sign |          |
+| Msg | bytes... | Msg to Sign |          |
 
 #### Response
 
