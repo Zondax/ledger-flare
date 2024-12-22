@@ -17,11 +17,13 @@
 #include <coin.h>
 #include <fmt/core.h>
 
-#include <iostream>
+#include <cstdint>
+#include <string>
+#include <vector>
 
-#include "testcases.h"
+#include "json/value.h"
 #include "zxformat.h"
-#include "zxmacros.h"
+#include "zxmacros_x64.h"
 const uint32_t fieldSize = 39;
 
 template <typename S, typename... Args>

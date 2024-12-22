@@ -17,9 +17,12 @@
 
 #include <parser.h>
 
+#include <cstdint>
 #include <sstream>
 #include <string>
+#include <vector>
 
+#include "parser_common.h"
 #include "parser_eth.h"
 
 std::vector<std::string> dumpUI(parser_context_t *ctx, uint16_t maxKeyLen, uint16_t maxValueLen, bool is_eth) {
