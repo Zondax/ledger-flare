@@ -118,8 +118,7 @@ zxerr_t _sign(uint8_t *output, uint16_t outputLen, const uint8_t *message, uint1
     const err_convert_e err_c =
         convertDERtoRSV(signature->der_signature, tmpInfo, signature->r, signature->s, &signature->v);
     if (err_c == no_error) {
-        *sigSize =
-            sizeof_field(signature_t, r) + sizeof_field(signature_t, s) + sizeof_field(signature_t, v) + signatureLength;
+        *sigSize = sizeof_field(signature_t, r) + sizeof_field(signature_t, s) + sizeof_field(signature_t, v);
         if (info != NULL) {
             *info = tmpInfo;
         }
