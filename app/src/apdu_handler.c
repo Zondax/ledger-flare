@@ -242,23 +242,35 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
             } else {
                 switch (instruction) {
                     case INS_GET_VERSION: {
+                        if (cla != CLA) {
+                            THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
+                        }
                         handle_getversion(flags, tx);
                         break;
                     }
 
                     case INS_GET_ADDR: {
+                        if (cla != CLA) {
+                            THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
+                        }
                         CHECK_PIN_VALIDATED()
                         handleGetAddr(flags, tx, rx);
                         break;
                     }
 
                     case INS_SIGN: {
+                        if (cla != CLA) {
+                            THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
+                        }
                         CHECK_PIN_VALIDATED()
                         handleSign(flags, tx, rx);
                         break;
                     }
 
                     case INS_SIGN_HASH: {
+                        if (cla != CLA) {
+                            THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
+                        }
                         CHECK_PIN_VALIDATED()
                         handleSignHash(flags, tx, rx);
                         break;
