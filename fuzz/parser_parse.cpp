@@ -3,7 +3,9 @@
 #include <cstdio>
 
 #include "parser.h"
-#include "zxformat.h"
+#include "parser_common.h"
+#include "parser_txdef.h"
+#include "zxmacros_x64.h"
 
 #ifdef NDEBUG
 #error "This fuzz target won't work correctly with NDEBUG defined, which will cause asserts to be eliminated"
@@ -22,7 +24,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     parser_context_t ctx;
     parser_error_t rc;
 
-    ctx.tx_type = flr_tx;
     rc = parser_parse(&ctx, data, size, &txObj);
     if (rc != parser_ok) {
         return 0;

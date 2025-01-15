@@ -14,20 +14,22 @@
  *  limitations under the License.
  ********************************************************************************/
 
-#include "parser_impl.h"
-
 #include <hexutils.h>
+#include <string.h>
 
-#include <iostream>
-#include <vector>
+#include <cstdint>
+#include <string>
 
 #include "bech32.h"
 #include "coin.h"
 #include "crypto_helper.h"
-#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "hexutils.h"
 #include "parser.h"
+#include "parser_common.h"
 #include "parser_txdef.h"
+#include "segwit_addr.h"
+#include "zxerror.h"
 
 extern "C" {
 #include "ripemd160.h"

@@ -44,7 +44,7 @@ The general structure of commands and responses is as follows:
 
 ## Command definition
 
-### GET_DEVICE_INFO
+### INS_GET_DEVICE_INFO
 
 #### Command
 
@@ -70,7 +70,7 @@ The general structure of commands and responses is as follows:
 
 ---
 
-### GET_VERSION
+### INS_GET_VERSION
 
 #### Command
 
@@ -211,6 +211,10 @@ All other packets/chunks contain data chunks that are described below
 
 ---
 
+## ETH INSTRUCTIONS
+
+For eth instructions the derivation path length can vary between 3 and 5 elements.
+
 ### INS_GET_ADDR_ETH
 
 #### Command
@@ -220,7 +224,7 @@ All other packets/chunks contain data chunks that are described below
 | CLA     | byte (1)        | Application Identifier    | 0xE0              |
 | INS     | byte (1)        | Instruction ID            | 0x02              |
 | P1      | byte (1)        | Request User confirmation | No = 0            |
-| P2      | byte (1)        | Chain code               | no chain code - 0x0 / chain code - 0x01           |
+| P2      | byte (1)        | Chain code                | no chain code - 0x0 / chain code - 0x01           |
 | L       | byte (1)        | Bytes in payload          | (depends)         |
 | Path[0] | byte (4)        | Derivation Path Data      | 0x8000002c        |
 | Path[1] | byte (4)        | Derivation Path Data      | 0x8000003c        |
@@ -273,6 +277,51 @@ All other packets/chunks contain data chunks that are described below
 | Field   | Type     | Content         | Expected |
 | ------- | -------- | --------------- | -------- |
 | Message | bytes... | Message to Sign |          |
+
+#### Response
+
+| Field   | Type      | Content     | Note                     |
+| ------- | --------- | ----------- | ------------------------ |
+| SIG     | byte (65) | Signature   |                          |
+| SW1-SW2 | byte (2)  | Return code | see list of return codes |
+
+---
+
+### INS_SIGN_PERSONAL_MESSAGE
+
+#### Command
+
+| Field | Type     | Content                | Expected  |
+| ----- | -------- | ---------------------- | --------- |
+| CLA   | byte (1) | Application Identifier | 0xE0      |
+| INS   | byte (1) | Instruction ID         | 0x08      |
+| P1    | byte (1) | Payload desc           | 0x0 = first  |
+|       |          |                        | 0x80 = more   |
+|       |          |                        |   |
+| P2    | byte (1) | ----                   | not used  |
+| L     | byte (1) | Bytes in the payload       | (depends) |
+
+The first packet/chunk includes the derivation path but it can also include some bytes of the message to be signed.
+
+All other packets/chunks contain data chunks that are described below
+
+##### First Packet
+
+| Field   | Type     | Content              | Expected |
+| ------- | -------- | -------------------- | -------- |
+| Path[0] | byte (4) | Derivation Path Data | 44       |
+| Path[1] | byte (4) | Derivation Path Data | 60       |
+| Path[2] | byte (4) | Derivation Path Data | ?        |
+| Path[3] | byte (4) | Derivation Path Data | ?        |
+| Path[4] | byte (4) | Derivation Path Data | ?        |
+| Msg size| byte (4) | Size of msg to sign | ?        |
+| Msg | bytes... | Msg to Sign |          |
+
+##### Other Chunks/Packets
+
+| Field   | Type     | Content         | Expected |
+| ------- | -------- | --------------- | -------- |
+| Msg | bytes... | Msg to Sign |          |
 
 #### Response
 

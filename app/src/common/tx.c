@@ -51,16 +51,6 @@ void tx_initialize() {
     buffering_init(ram_buffer, sizeof(ram_buffer), (uint8_t *)N_appdata.buffer, sizeof(N_appdata.buffer));
 }
 
-void tx_initialize_flr() {
-    ctx_parsed_tx.tx_type = flr_tx;
-    tx_initialize();
-}
-
-void tx_initialize_eth() {
-    ctx_parsed_tx.tx_type = eth_tx;
-    tx_initialize();
-}
-
 void tx_reset() { buffering_reset(); }
 
 uint32_t tx_append(unsigned char *buffer, uint32_t length) { return buffering_append(buffer, length); }
@@ -69,7 +59,7 @@ uint32_t tx_get_buffer_length() { return buffering_get_buffer()->pos; }
 
 uint8_t *tx_get_buffer() { return buffering_get_buffer()->data; }
 
-const char *tx_parse() {
+const char *tx_parse(uint8_t *error_code) {
     MEMZERO(&tx_obj, sizeof(tx_obj));
 
     uint8_t err = parser_parse(&ctx_parsed_tx, tx_get_buffer(), tx_get_buffer_length(), &tx_obj);
@@ -81,6 +71,7 @@ const char *tx_parse() {
     }
 
     err = parser_validate(&ctx_parsed_tx);
+    *error_code = err;
     CHECK_APP_CANARY()
 
     if (err != parser_ok) {
@@ -118,14 +109,6 @@ zxerr_t tx_getItem(int8_t displayIdx, char *outKey, uint16_t outKeyLen, char *ou
     // Convert error codes
     if (err == parser_no_data || err == parser_display_idx_out_of_range || err == parser_display_page_out_of_range)
         return zxerr_no_data;
-
-    if (err != parser_ok) return zxerr_unknown;
-
-    return zxerr_ok;
-}
-
-zxerr_t tx_compute_eth_v(unsigned int info, uint8_t *v) {
-    parser_error_t err = parser_compute_eth_v(&ctx_parsed_tx, info, v);
 
     if (err != parser_ok) return zxerr_unknown;
 

@@ -15,16 +15,28 @@
  ********************************************************************************/
 
 #include <hexutils.h>
-#include <json/json.h>
+#include <json/config.h>
+#include <json/reader.h>
+#include <json/value.h>
 #include <parser_txdef.h>
 
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
 #include <fstream>
 #include <iostream>
+#include <sstream>
+#include <string>
+#include <vector>
 
 #include "app_mode.h"
 #include "expected_output.h"
 #include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "parser.h"
+#include "parser_common.h"
+#include "parser_eth.h"
 #include "testcases.h"
 #include "utils/common.h"
 
@@ -123,10 +135,11 @@ std::vector<testcase_t> GetEVMJsonTestCases(const std::string &jsonFile, Generat
     return answer;
 }
 
-void check_testcase(const testcase_t &tc, bool expert_mode, parser_context_t ctx) {
+void check_testcase(const testcase_t &tc, bool expert_mode, bool is_eth) {
     app_mode_set_expert(expert_mode);
 
     parser_error_t err;
+    parser_context_t ctx;
 
     uint8_t buffer[5000];
     const uint16_t bufferLen = parseHexString(buffer, sizeof(buffer), tc.blob.c_str());
@@ -134,10 +147,14 @@ void check_testcase(const testcase_t &tc, bool expert_mode, parser_context_t ctx
     parser_tx_t tx_obj;
     memset(&tx_obj, 0, sizeof(tx_obj));
 
-    err = parser_parse(&ctx, buffer, bufferLen, &tx_obj);
+    if (is_eth) {
+        err = parser_parse_eth(&ctx, buffer, bufferLen);
+    } else {
+        err = parser_parse(&ctx, buffer, bufferLen, &tx_obj);
+    }
     ASSERT_EQ(err, parser_ok) << parser_getErrorDescription(err);
 
-    auto output = dumpUI(&ctx, 39, 39);
+    auto output = dumpUI(&ctx, 39, 39, is_eth);
 
     std::cout << std::endl;
     for (const auto &i : output) {
@@ -155,18 +172,6 @@ void check_testcase(const testcase_t &tc, bool expert_mode, parser_context_t ctx
     }
 }
 
-void check_testcase_flr(const testcase_t &tc, bool a) {
-    parser_context_t ctx;
-    ctx.tx_type = flr_tx;
-    check_testcase(tc, a, ctx);
-}
-
-void check_testcase_eth(const testcase_t &tc, bool a) {
-    parser_context_t ctx;
-    ctx.tx_type = eth_tx;
-    check_testcase(tc, a, ctx);
-}
-
 class VerifyEvmTransactions : public JsonTestsA {};
 
 INSTANTIATE_TEST_SUITE_P(JsonTestCasesCurrentTxVer, JsonTestsA,
@@ -176,6 +181,6 @@ INSTANTIATE_TEST_SUITE_P(EVMJsonTestCasesCurrentTxVer, VerifyEvmTransactions,
                          ::testing::ValuesIn(GetEVMJsonTestCases("testvectors/evm.json", EVMGenerateExpectedUIOutput)),
                          JsonTestsA::PrintToStringParamName());
 
-TEST_P(JsonTestsA, JsonTestsA_CheckUIOutput_CurrentTX_Normal) { check_testcase_flr(GetParam(), false); }
-TEST_P(JsonTestsA, JsonTestsA_CheckUIOutput_CurrentTX_Expert) { check_testcase_flr(GetParam(), true); }
-TEST_P(VerifyEvmTransactions, JsonTestsEVM_CheckUIOutput_CurrentTX_Normal) { check_testcase_eth(GetParam(), false); }
+TEST_P(JsonTestsA, JsonTestsA_CheckUIOutput_CurrentTX_Normal) { check_testcase(GetParam(), false, false); }
+TEST_P(JsonTestsA, JsonTestsA_CheckUIOutput_CurrentTX_Expert) { check_testcase(GetParam(), true, false); }
+TEST_P(VerifyEvmTransactions, JsonTestsEVM_CheckUIOutput_CurrentTX_Normal) { check_testcase(GetParam(), false, true); }

@@ -20,7 +20,6 @@ extern "C" {
 #endif
 
 #define CLA 0x58
-#define CLA_ETH 0xE0
 
 typedef enum {
     BECH32 = 0,
@@ -30,9 +29,6 @@ typedef enum {
 #define INS_SIGN_HASH 0x3
 #define MAX_BIP32_PATH 10
 #define HDPATH_LEN_DEFAULT 5
-
-#define HDPATH_ETH_0_DEFAULT (0x80000000u | 0x2cu)
-#define HDPATH_ETH_1_DEFAULT (0x80000000u | 0x3cu)
 
 #define HDPATH_2_DEFAULT (0x80000000u | 0u)
 #define HDPATH_3_DEFAULT (0u)
@@ -54,19 +50,11 @@ typedef enum {
 #define COIN_AMOUNT_DECIMAL_PLACES 6
 #define COIN_TICKER "FLR "
 
-// transaction is sent as a blob of rlp encoded bytes,
-#define P1_ETH_FIRST 0x00
-#define P1_ETH_MORE 0x80
-// eth address chain_code allowed valuec
-#define P2_NO_CHAINCODE 0x00
-#define P2_CHAINCODE 0x01
-
 #define SECP256K1_SK_LEN 64u
 #define SECP256K1_PK_LEN 65u
 #define ETH_ADDR_LEN 20u
 
-#define INS_SIGN_ETH 0x04
-#define INS_GET_ADDR_ETH 0x02
+#define COIN_AMOUNT_DECIMAL 18
 
 #define MENU_MAIN_APP_LINE1 "Flare Network"
 #define MENU_MAIN_APP_LINE2 "Ready"

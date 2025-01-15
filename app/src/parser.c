@@ -23,13 +23,14 @@
 #include <zxtypes.h>
 
 #include "apdu_codes.h"
+#include "app_mode.h"
 #include "coin.h"
 #include "crypto.h"
 #include "crypto_helper.h"
 #include "parser_impl_common.h"
-#include "parser_impl_eth.h"
 #include "tx_cchain.h"
 #include "tx_pchain.h"
+
 parser_error_t parser_init_context(parser_context_t *ctx, const uint8_t *buffer, uint16_t bufferSize) {
     ctx->offset = 0;
     ctx->buffer = NULL;
@@ -46,25 +47,13 @@ parser_error_t parser_init_context(parser_context_t *ctx, const uint8_t *buffer,
 }
 
 parser_error_t parser_parse(parser_context_t *ctx, const uint8_t *data, size_t dataLen, parser_tx_t *tx_obj) {
-    switch (ctx->tx_type) {
-        case flr_tx: {
-            CHECK_ERROR(parser_init_context(ctx, data, dataLen))
-            ctx->tx_obj = tx_obj;
-            return _read(ctx, tx_obj);
-        }
-        case eth_tx: {
-            CHECK_ERROR(parser_init_context(ctx, data, dataLen))
-            return _readEth(ctx, &eth_tx_obj);
-        }
-        default:
-            return parser_unsupported_tx;
-    }
+    CHECK_ERROR(parser_init_context(ctx, data, dataLen))
+    ctx->tx_obj = tx_obj;
+    app_mode_skip_blindsign_ui();
+    return _read(ctx, tx_obj);
 }
 
 parser_error_t parser_validate(parser_context_t *ctx) {
-    if (ctx->tx_type == eth_tx) {
-        CHECK_ERROR(_validateTxEth())
-    }
     // Iterate through all items to check that all can be shown and are valid
     uint8_t numItems = 0;
     CHECK_ERROR(parser_getNumItems(ctx, &numItems))
@@ -80,30 +69,24 @@ parser_error_t parser_validate(parser_context_t *ctx) {
 }
 
 parser_error_t parser_getNumItems(const parser_context_t *ctx, uint8_t *num_items) {
-    switch (ctx->tx_type) {
-        case flr_tx: {
-            CHECK_ERROR(getNumItems(ctx, num_items));
-            break;
-        }
-        case eth_tx: {
-            CHECK_ERROR(_getNumItemsEth(num_items));
-            break;
-        }
-
-        default:
-            return parser_unsupported_tx;
-    }
+    CHECK_ERROR(getNumItems(ctx, num_items));
     return parser_ok;
 }
 
-static void cleanOutput(char *outKey, uint16_t outKeyLen, char *outVal, uint16_t outValLen) {
+parser_error_t cleanOutput(char *outKey, uint16_t outKeyLen, char *outVal, uint16_t outValLen) {
+    if (outKey == NULL || outVal == NULL || outKeyLen == 0 || outValLen == 0) {
+        return parser_no_data;
+    };
+
     MEMZERO(outKey, outKeyLen);
     MEMZERO(outVal, outValLen);
     snprintf(outKey, outKeyLen, "?");
     snprintf(outVal, outValLen, " ");
+
+    return parser_ok;
 }
 
-static parser_error_t checkSanity(uint8_t numItems, uint8_t displayIdx) {
+parser_error_t checkSanity(uint8_t numItems, uint8_t displayIdx) {
     if (displayIdx >= numItems) {
         return parser_display_idx_out_of_range;
     }
@@ -119,7 +102,7 @@ parser_error_t _getItemFlr(const parser_context_t *ctx, uint8_t displayIdx, char
     CHECK_APP_CANARY()
 
     CHECK_ERROR(checkSanity(numItems, displayIdx))
-    cleanOutput(outKey, outKeyLen, outVal, outValLen);
+    CHECK_ERROR(cleanOutput(outKey, outKeyLen, outVal, outValLen));
 
     switch (ctx->tx_obj->tx_type) {
         case p_export_tx:
@@ -142,18 +125,5 @@ parser_error_t _getItemFlr(const parser_context_t *ctx, uint8_t displayIdx, char
 
 parser_error_t parser_getItem(const parser_context_t *ctx, uint8_t displayIdx, char *outKey, uint16_t outKeyLen,
                               char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount) {
-    switch (ctx->tx_type) {
-        case flr_tx: {
-            return _getItemFlr(ctx, displayIdx, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount);
-        }
-        case eth_tx: {
-            return _getItemEth(ctx, displayIdx, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount);
-        }
-        default:
-            return parser_unsupported_tx;
-    }
-}
-
-parser_error_t parser_compute_eth_v(parser_context_t *ctx, unsigned int info, uint8_t *v) {
-    return _computeV(ctx, &eth_tx_obj, info, v);
+    return _getItemFlr(ctx, displayIdx, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount);
 }
