@@ -55,6 +55,10 @@ static parser_error_t parser_base_tx(parser_context_t *c, transferable_in_secp_t
     return parser_ok;
 }
 
+parser_error_t parser_handle_base_tx(parser_context_t *c, parser_tx_t *v) {
+    return parser_base_tx(c, &v->tx.base_tx.base_secp_ins, &v->tx.base_tx.base_secp_outs);
+}
+
 parser_error_t parser_handle_p_export_tx(parser_context_t *c, parser_tx_t *v) {
     // Parse base tx
     CHECK_ERROR(parser_base_tx(c, &v->tx.p_export_tx.base_secp_ins, &v->tx.p_export_tx.base_secp_outs));
@@ -201,6 +205,9 @@ parser_error_t parser_handle_add_permissionless_delegator_validator(parser_conte
 
 parser_error_t parser_pchain(parser_context_t *c, parser_tx_t *v) {
     switch (v->tx_type) {
+        case base_tx:
+            return parser_handle_base_tx(c, v);
+            break;
         case p_export_tx:
             return parser_handle_p_export_tx(c, v);
             break;
@@ -405,4 +412,53 @@ parser_error_t print_add_permissionless_del_val_tx(const parser_context_t *ctx, 
             return parser_display_idx_out_of_range;
     }
     return parser_ok;
+}
+
+parser_error_t print_base_tx(const parser_context_t *ctx, uint8_t displayIdx, char *outKey, uint16_t outKeyLen,
+                             char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount) {
+    if (displayIdx == 0) {
+        snprintf(outKey, outKeyLen, "Send");
+        snprintf(outVal, outValLen, "P chain");
+        return parser_ok;
+    }
+
+    if (displayIdx <= ctx->tx_obj->tx.base_tx.base_secp_outs.n_addrs + ctx->tx_obj->tx.base_tx.base_secp_outs.n_outs) {
+        parser_context_t output_ctx = {.buffer = ctx->tx_obj->tx.base_tx.base_secp_outs.outs,
+                                       .bufferLen = ctx->bufferLen - ctx->tx_obj->tx.base_tx.base_secp_outs.outs_offset + 1,
+                                       .offset = 0,
+                                       .tx_obj = NULL};
+
+        uint8_t inner_displayIdx = displayIdx - 1;
+        uint8_t element_idx = 0;
+        uint64_t amount = 0;
+        uint8_t address[ADDRESS_LEN] = {0};
+
+        CHECK_ERROR(parser_get_secp_output_for_index(&output_ctx, ctx->tx_obj->tx.base_tx.base_secp_outs, inner_displayIdx,
+                                                     &amount, address, &element_idx));
+        if (!element_idx) {
+            snprintf(outKey, outKeyLen, "Amount");
+            CHECK_ERROR(printAmount64(amount, AMOUNT_DECIMAL_PLACES, ctx->tx_obj->network_id, outVal, outValLen, pageIdx,
+                                      pageCount));
+        } else {
+            snprintf(outKey, outKeyLen, "Address");
+            CHECK_ERROR(printAddress(address, ctx->tx_obj->network_id, outVal, outValLen, pageIdx, pageCount));
+        }
+        return parser_ok;
+    }
+
+    if (displayIdx == ctx->tx_obj->tx.base_tx.base_secp_outs.n_addrs + ctx->tx_obj->tx.base_tx.base_secp_outs.n_outs + 1) {
+        snprintf(outKey, outKeyLen, "Fee");
+        uint64_t fee = ctx->tx_obj->tx.base_tx.base_secp_ins.in_sum - ctx->tx_obj->tx.base_tx.base_secp_outs.out_sum;
+        CHECK_ERROR(
+            printAmount64(fee, AMOUNT_DECIMAL_PLACES, ctx->tx_obj->network_id, outVal, outValLen, pageIdx, pageCount));
+        return parser_ok;
+    }
+
+    if (displayIdx == ctx->tx_obj->tx.base_tx.base_secp_outs.n_addrs + ctx->tx_obj->tx.base_tx.base_secp_outs.n_outs + 1 + 1) {
+        snprintf(outKey, outKeyLen, "Hash");
+        printHash(ctx, outVal, outValLen, pageIdx, pageCount);
+        return parser_ok;
+    }
+
+    return parser_display_idx_out_of_range;
 }

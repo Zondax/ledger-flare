@@ -53,6 +53,7 @@ extern "C" {
 #define C_CHAIN_EXPORT_TX 0x00000001
 #define ADD_PERMISSIONLESS_VALIDATOR_TX 0x00000019
 #define ADD_PERMISSIONLESS_DELEGATOR_TX 0x0000001a
+#define BASE_TX 0x00000022
 
 #define MAINNET_ID 14
 #define COSTON_ID 7
@@ -84,6 +85,7 @@ typedef enum {
     c_export_tx,
     add_permissionless_validator_tx,
     add_permissionless_delegator_tx,
+    base_tx,
 } tx_type_e;
 
 typedef struct {
@@ -205,6 +207,11 @@ typedef struct {
     secp_owners_out_t delegator_rewards_owner;
 } p_add_permissionless_delegator_tx_t;
 
+typedef struct {
+    transferable_out_secp_t base_secp_outs;
+    transferable_in_secp_t base_secp_ins;
+} base_tx_t;
+
 typedef union tx_command {
     p_import_tx_t p_import_tx;
     p_export_tx_t p_export_tx;
@@ -212,6 +219,7 @@ typedef union tx_command {
     c_export_tx_t c_export_tx;
     p_add_permissionless_validator_tx_t add_permissionless_validator_tx;
     p_add_permissionless_delegator_tx_t add_permissionless_delegator_tx;
+    base_tx_t base_tx;
 } tx_t;
 
 typedef struct {

@@ -105,6 +105,8 @@ parser_error_t _getItemFlr(const parser_context_t *ctx, uint8_t displayIdx, char
     CHECK_ERROR(cleanOutput(outKey, outKeyLen, outVal, outValLen));
 
     switch (ctx->tx_obj->tx_type) {
+        case base_tx:
+            return print_base_tx(ctx, displayIdx, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount);
         case p_export_tx:
             return print_p_export_tx(ctx, displayIdx, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount);
         case p_import_tx:

@@ -65,6 +65,9 @@ static parser_error_t parser_map_tx_type(parser_context_t *c, parser_tx_t *v) {
     CHECK_ERROR(read_u32(c, &raw_tx_type))
 
     switch (raw_tx_type) {
+        case BASE_TX:
+            v->tx_type = base_tx;
+            break;
         case P_CHAIN_EXPORT_TX:
             v->tx_type = p_export_tx;
             break;
@@ -157,6 +160,11 @@ parser_error_t getNumItems(const parser_context_t *ctx, uint8_t *numItems) {
     *numItems = 0;
     const uint8_t expertModeHashField = app_mode_expert() ? 1 : 0;
     switch (ctx->tx_obj->tx_type) {
+        case base_tx:
+            // Tx + fee + Amounts(= n_outs) + Addresses
+            *numItems = 2 + ctx->tx_obj->tx.base_tx.base_secp_outs.n_addrs + ctx->tx_obj->tx.base_tx.base_secp_outs.n_outs +
+                        expertModeHashField;
+            break;
         case p_export_tx:
             // Tx + fee + Amounts(= n_outs) + Addresses
             *numItems = 2 + ctx->tx_obj->tx.p_export_tx.secp_outs.n_addrs + ctx->tx_obj->tx.p_export_tx.secp_outs.n_outs +
