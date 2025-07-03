@@ -311,8 +311,9 @@ parser_error_t print_p_import_tx(const parser_context_t *ctx, uint8_t displayIdx
         uint8_t address[ADDRESS_LEN] = {0};
 
         // check which output cointains the displayIdx we want
-        CHECK_ERROR(parser_get_secp_output_for_index(&output_ctx, ctx->tx_obj->tx.p_export_tx.base_secp_outs,
+        CHECK_ERROR(parser_get_secp_output_for_index(&output_ctx, ctx->tx_obj->tx.p_import_tx.base_secp_outs,
                                                      inner_displayIdx, &amount, address, &element_idx));
+
         if (!element_idx) {
             snprintf(outKey, outKeyLen, "Amount");
             CHECK_ERROR(printAmount64(amount, AMOUNT_DECIMAL_PLACES, ctx->tx_obj->network_id, outVal, outValLen, pageIdx,
