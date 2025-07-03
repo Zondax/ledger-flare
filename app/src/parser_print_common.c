@@ -205,7 +205,8 @@ parser_error_t printHash(const parser_context_t *ctx, char *outVal, uint16_t out
     return parser_ok;
 }
 
-parser_error_t printSubnetId(const uint8_t *subnetId, char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount) {
+parser_error_t printSubnetId(const uint8_t *subnetId, char *outVal, uint16_t outValLen, uint8_t pageIdx,
+                             uint8_t *pageCount) {
     if (subnetId == NULL) {
         return parser_unexpected_error;
     }

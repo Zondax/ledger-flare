@@ -117,7 +117,8 @@ parser_error_t _getItemFlr(const parser_context_t *ctx, uint8_t displayIdx, char
             return print_c_import_tx(ctx, displayIdx, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount);
         case add_permissionless_delegator_tx:
         case add_permissionless_validator_tx:
-            return print_add_permissionless_del_val_tx(ctx, displayIdx, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount);
+            return print_add_permissionless_del_val_tx(ctx, displayIdx, outKey, outKeyLen, outVal, outValLen, pageIdx,
+                                                       pageCount);
         default:
             break;
     }

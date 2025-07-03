@@ -116,14 +116,16 @@ parser_error_t parser_handle_p_import_tx(parser_context_t *c, parser_tx_t *v) {
 // https://build.avax.network/docs/api-reference/p-chain/txn-format#unsigned-add-permissionless-delegator-tx
 parser_error_t parser_handle_add_permissionless_delegator_validator(parser_context_t *c, parser_tx_t *v) {
     if (v->tx_type == add_permissionless_validator_tx) {
-        CHECK_ERROR(parser_base_tx(c, &v->tx.add_permissionless_validator_tx.base_secp_ins, &v->tx.add_permissionless_validator_tx.base_secp_outs));
+        CHECK_ERROR(parser_base_tx(c, &v->tx.add_permissionless_validator_tx.base_secp_ins,
+                                   &v->tx.add_permissionless_validator_tx.base_secp_outs));
     } else {
-        CHECK_ERROR(parser_base_tx(c, &v->tx.add_permissionless_delegator_tx.base_secp_ins, &v->tx.add_permissionless_delegator_tx.base_secp_outs));
+        CHECK_ERROR(parser_base_tx(c, &v->tx.add_permissionless_delegator_tx.base_secp_ins,
+                                   &v->tx.add_permissionless_delegator_tx.base_secp_outs));
     }
 
-    validator_t *validator = (v->tx_type == add_permissionless_validator_tx) ? 
-        &v->tx.add_permissionless_validator_tx.validator : 
-        &v->tx.add_permissionless_delegator_tx.validator;
+    validator_t *validator = (v->tx_type == add_permissionless_validator_tx)
+                                 ? &v->tx.add_permissionless_validator_tx.validator
+                                 : &v->tx.add_permissionless_delegator_tx.validator;
 
     CHECK_ERROR(verifyContext(c));
     validator->node_id = c->buffer + c->offset;
@@ -149,12 +151,12 @@ parser_error_t parser_handle_add_permissionless_delegator_validator(parser_conte
 
     if (v->tx_type == add_permissionless_validator_tx) {
         CHECK_ERROR(read_u32(c, &v->tx.add_permissionless_validator_tx.signer.signer_type));
-        
+
         if (v->tx.add_permissionless_validator_tx.signer.signer_type == PROOF_OF_POSSESSION_TYPE_ID) {
             CHECK_ERROR(verifyContext(c));
             v->tx.add_permissionless_validator_tx.signer.signer_data.proof_of_possession.public_key = c->buffer + c->offset;
             CHECK_ERROR(verifyBytes(c, 48));
-            
+
             CHECK_ERROR(verifyContext(c));
             v->tx.add_permissionless_validator_tx.signer.signer_data.proof_of_possession.signature = c->buffer + c->offset;
             CHECK_ERROR(verifyBytes(c, 96));
@@ -163,9 +165,9 @@ parser_error_t parser_handle_add_permissionless_delegator_validator(parser_conte
         }
     }
 
-    transferable_out_secp_t *stake_outs = (v->tx_type == add_permissionless_validator_tx) ? 
-        &v->tx.add_permissionless_validator_tx.stake_outs : 
-        &v->tx.add_permissionless_delegator_tx.stake_outs;
+    transferable_out_secp_t *stake_outs = (v->tx_type == add_permissionless_validator_tx)
+                                              ? &v->tx.add_permissionless_validator_tx.stake_outs
+                                              : &v->tx.add_permissionless_delegator_tx.stake_outs;
 
     CHECK_ERROR(read_u32(c, &stake_outs->n_outs));
     if (stake_outs->n_outs > MAX_OUTPUTS) {
@@ -187,9 +189,9 @@ parser_error_t parser_handle_add_permissionless_delegator_validator(parser_conte
         CHECK_ERROR(parse_secp_owners_output(c, &v->tx.add_permissionless_validator_tx.validator_rewards_owner));
     }
 
-    secp_owners_out_t *delegator_rewards_owner = (v->tx_type == add_permissionless_validator_tx) ? 
-        &v->tx.add_permissionless_validator_tx.delegator_rewards_owner : 
-        &v->tx.add_permissionless_delegator_tx.delegator_rewards_owner;
+    secp_owners_out_t *delegator_rewards_owner = (v->tx_type == add_permissionless_validator_tx)
+                                                     ? &v->tx.add_permissionless_validator_tx.delegator_rewards_owner
+                                                     : &v->tx.add_permissionless_delegator_tx.delegator_rewards_owner;
 
     CHECK_ERROR(verifyContext(c));
     delegator_rewards_owner->outs = c->buffer + c->offset;
@@ -342,11 +344,12 @@ parser_error_t print_p_import_tx(const parser_context_t *ctx, uint8_t displayIdx
     return parser_display_idx_out_of_range;
 }
 
-parser_error_t print_add_permissionless_del_val_tx(const parser_context_t *ctx, uint8_t displayIdx, char *outKey, uint16_t outKeyLen,
-                                    char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount) {
-    const validator_t *validator = (ctx->tx_obj->tx_type == add_permissionless_validator_tx) ? 
-        &ctx->tx_obj->tx.add_permissionless_validator_tx.validator : 
-        &ctx->tx_obj->tx.add_permissionless_delegator_tx.validator;
+parser_error_t print_add_permissionless_del_val_tx(const parser_context_t *ctx, uint8_t displayIdx, char *outKey,
+                                                   uint16_t outKeyLen, char *outVal, uint16_t outValLen, uint8_t pageIdx,
+                                                   uint8_t *pageCount) {
+    const validator_t *validator = (ctx->tx_obj->tx_type == add_permissionless_validator_tx)
+                                       ? &ctx->tx_obj->tx.add_permissionless_validator_tx.validator
+                                       : &ctx->tx_obj->tx.add_permissionless_delegator_tx.validator;
 
     switch (displayIdx) {
         case 0:
@@ -363,15 +366,18 @@ parser_error_t print_add_permissionless_del_val_tx(const parser_context_t *ctx, 
             break;
         case 3:
             snprintf(outKey, outKeyLen, "Total stake");
-            CHECK_ERROR(printAmount64(validator->weight, AMOUNT_DECIMAL_PLACES, ctx->tx_obj->network_id, outVal, outValLen, pageIdx, pageCount));
+            CHECK_ERROR(printAmount64(validator->weight, AMOUNT_DECIMAL_PLACES, ctx->tx_obj->network_id, outVal, outValLen,
+                                      pageIdx, pageCount));
             break;
         case 4:
             if (ctx->tx_obj->tx_type == add_permissionless_validator_tx) {
                 snprintf(outKey, outKeyLen, "Rewards to");
-                CHECK_ERROR(printAddress(ctx->tx_obj->tx.add_permissionless_validator_tx.validator_rewards_owner.addr, ctx->tx_obj->network_id, outVal, outValLen, pageIdx, pageCount));
+                CHECK_ERROR(printAddress(ctx->tx_obj->tx.add_permissionless_validator_tx.validator_rewards_owner.addr,
+                                         ctx->tx_obj->network_id, outVal, outValLen, pageIdx, pageCount));
             } else {
                 snprintf(outKey, outKeyLen, "Rewards to");
-                CHECK_ERROR(printAddress(ctx->tx_obj->tx.add_permissionless_delegator_tx.delegator_rewards_owner.addr, ctx->tx_obj->network_id, outVal, outValLen, pageIdx, pageCount));
+                CHECK_ERROR(printAddress(ctx->tx_obj->tx.add_permissionless_delegator_tx.delegator_rewards_owner.addr,
+                                         ctx->tx_obj->network_id, outVal, outValLen, pageIdx, pageCount));
             }
             break;
         case 5:
@@ -383,18 +389,20 @@ parser_error_t print_add_permissionless_del_val_tx(const parser_context_t *ctx, 
             } else {
                 snprintf(outKey, outKeyLen, "Fee");
                 uint64_t fee = ctx->tx_obj->tx.add_permissionless_delegator_tx.base_secp_ins.in_sum -
-                               (ctx->tx_obj->tx.add_permissionless_delegator_tx.base_secp_outs.out_sum + 
+                               (ctx->tx_obj->tx.add_permissionless_delegator_tx.base_secp_outs.out_sum +
                                 ctx->tx_obj->tx.add_permissionless_delegator_tx.stake_outs.out_sum);
-                CHECK_ERROR(printAmount64(fee, AMOUNT_DECIMAL_PLACES, ctx->tx_obj->network_id, outVal, outValLen, pageIdx, pageCount));
+                CHECK_ERROR(printAmount64(fee, AMOUNT_DECIMAL_PLACES, ctx->tx_obj->network_id, outVal, outValLen, pageIdx,
+                                          pageCount));
                 break;
             }
         case 6:
             if (ctx->tx_obj->tx_type == add_permissionless_validator_tx) {
                 snprintf(outKey, outKeyLen, "Fee");
                 uint64_t fee = ctx->tx_obj->tx.add_permissionless_validator_tx.base_secp_ins.in_sum -
-                               (ctx->tx_obj->tx.add_permissionless_validator_tx.base_secp_outs.out_sum + 
+                               (ctx->tx_obj->tx.add_permissionless_validator_tx.base_secp_outs.out_sum +
                                 ctx->tx_obj->tx.add_permissionless_validator_tx.stake_outs.out_sum);
-                CHECK_ERROR(printAmount64(fee, AMOUNT_DECIMAL_PLACES, ctx->tx_obj->network_id, outVal, outValLen, pageIdx, pageCount));
+                CHECK_ERROR(printAmount64(fee, AMOUNT_DECIMAL_PLACES, ctx->tx_obj->network_id, outVal, outValLen, pageIdx,
+                                          pageCount));
             } else {
                 snprintf(outKey, outKeyLen, "Hash");
                 printHash(ctx, outVal, outValLen, pageIdx, pageCount);
@@ -414,8 +422,8 @@ parser_error_t print_add_permissionless_del_val_tx(const parser_context_t *ctx, 
     return parser_ok;
 }
 
-parser_error_t print_base_tx(const parser_context_t *ctx, uint8_t displayIdx, char *outKey, uint16_t outKeyLen,
-                             char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount) {
+parser_error_t print_base_tx(const parser_context_t *ctx, uint8_t displayIdx, char *outKey, uint16_t outKeyLen, char *outVal,
+                             uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount) {
     if (displayIdx == 0) {
         snprintf(outKey, outKeyLen, "Send");
         snprintf(outVal, outValLen, "P chain");
@@ -454,7 +462,8 @@ parser_error_t print_base_tx(const parser_context_t *ctx, uint8_t displayIdx, ch
         return parser_ok;
     }
 
-    if (displayIdx == ctx->tx_obj->tx.base_tx.base_secp_outs.n_addrs + ctx->tx_obj->tx.base_tx.base_secp_outs.n_outs + 1 + 1) {
+    if (displayIdx ==
+        ctx->tx_obj->tx.base_tx.base_secp_outs.n_addrs + ctx->tx_obj->tx.base_tx.base_secp_outs.n_outs + 1 + 1) {
         snprintf(outKey, outKeyLen, "Hash");
         printHash(ctx, outVal, outValLen, pageIdx, pageCount);
         return parser_ok;
