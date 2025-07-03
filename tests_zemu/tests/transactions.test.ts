@@ -38,16 +38,16 @@ const TEST_DATA = [
     ),
   },
   {
-    name: 'add_delegator',
+    name: 'add_permissionless_delegator',
     blob: Buffer.from(
-      '00000000000e0000007200000000000000000000000000000000000000000000000000000000000000000000000000000001b993f9ccf0cedd0ee0d62013b052b6cfad7ffd2a6db79df6a022d1e36a9e729e0000000058734f94af871c3d131b56131b6fb7a0291eacadd261e69dfb42a9cdf6f7fddd0000000500002d79883d200000000001000000000000000072425e3b7e8d42218e7dc394d93f2fd64b2a60f1000000006571e187000000006581a85100002d79883d20000000000158734f94af871c3d131b56131b6fb7a0291eacadd261e69dfb42a9cdf6f7fddd0000000700002d79883d200000000000000000000000000100000001db89a2339639a5f3fa183258cfea265e4d1cce6c0000000b00000000000000000000000100000001db89a2339639a5f3fa183258cfea265e4d1cce6c',
+      '00000000001a0000007200000000000000000000000000000000000000000000000000000000000000000000000158734f94af871c3d131b56131b6fb7a0291eacadd261e69dfb42a9cdf6f7fddd0000000700000c7bbb20ce00000000000000000000000001000000019198a74bed93e968051bbdbd84a37a0a5c20c09c00000001c7a99bb2da18fd79adc998fa3544d8bf933172cda43092fdd6da470a206cc18c0000000058734f94af871c3d131b56131b6fb7a0291eacadd261e69dfb42a9cdf6f7fddd00000005000039f5435dee00000000010000000000000000664b4924a25af8be5f07052b2c2e582f7c10a65400000000683d5eec00000000689dcfc000002d79883d200000000000000000000000000000000000000000000000000000000000000000000000000158734f94af871c3d131b56131b6fb7a0291eacadd261e69dfb42a9cdf6f7fddd0000000700002d79883d2000000000000000000000000001000000019198a74bed93e968051bbdbd84a37a0a5c20c09c0000000b000000000000000000000001000000019198a74bed93e968051bbdbd84a37a0a5c20c09c',
       'hex',
     ),
   },
   {
-    name: 'add_validator',
+    name: 'add_permissionless_validator',
     blob: Buffer.from(
-      '00000000000e0000007200000000000000000000000000000000000000000000000000000000000000000000000000000001b993f9ccf0cedd0ee0d62013b052b6cfad7ffd2a6db79df6a022d1e36a9e729e0000000058734f94af871c3d131b56131b6fb7a0291eacadd261e69dfb42a9cdf6f7fddd0000000500002d79883d200000000001000000000000000072425e3b7e8d42218e7dc394d93f2fd64b2a60f1000000006571e187000000006581a85100002d79883d20000000000158734f94af871c3d131b56131b6fb7a0291eacadd261e69dfb42a9cdf6f7fddd0000000700002d79883d200000000000000000000000000100000001db89a2339639a5f3fa183258cfea265e4d1cce6c0000000b00000000000000000000000100000001db89a2339639a5f3fa183258cfea265e4d1cce6c',
+      '0000000000190000007200000000000000000000000000000000000000000000000000000000000000000000000158734f94af871c3d131b56131b6fb7a0291eacadd261e69dfb42a9cdf6f7fddd00000007000011d59a463a80000000000000000000000001000000019198a74bed93e968051bbdbd84a37a0a5c20c09c000000059200c2050884a47b350c9a95860c961d48bd53a36eed9ab1df8d8338630ea25a0000000058734f94af871c3d131b56131b6fb7a0291eacadd261e69dfb42a9cdf6f7fddd00000005000020e7ea185f40000000010000000095bdc4916bd403d4a1d79e82fc8e795d671ef374f3fb5181cb1b1e8246356f750000000058734f94af871c3d131b56131b6fb7a0291eacadd261e69dfb42a9cdf6f7fddd0000000500037619ecaaabc00000000100000000c7a99bb2da18fd79adc998fa3544d8bf933172cda43092fdd6da470a206cc18c0000000058734f94af871c3d131b56131b6fb7a0291eacadd261e69dfb42a9cdf6f7fddd00000005000039f5435dee000000000100000000d82311262b2692d26e31bb69b0504f81316475cec12d9d239ea6a3c3394de1d90000000058734f94af871c3d131b56131b6fb7a0291eacadd261e69dfb42a9cdf6f7fddd00000005000000003b9aca000000000100000000e4060c85511274cffa695e6d7750adb2dd0f71d88fb3dcf708820986cfb6f5bf0000000158734f94af871c3d131b56131b6fb7a0291eacadd261e69dfb42a9cdf6f7fddd0000000500002d79883d200000000001000000000000000014730ff26ca098fa9136be29b6516bd1a26f325a00000000684015600000000068a83fa00003ec9b43b2a88000000000000000000000000000000000000000000000000000000000000000000000001c8bb576f96756931c6b3254185e4120f29424bd6d35cb2f057227fdf4174a816295398429cb0950aed3088af6cb5d2cc7aac7ce093e81ac934e3d7d2849debb9cffaa06e116a2db7f68584096e9f85436f2c4e0ec85b52b71349f5d14bcde4e7d10d39cd9ac16ec74833fd7fcb24d7b093915a4bb0e8d5c7237212a42f5945e3ed4662c8b540fae4bc904b9a8226e844c0000000158734f94af871c3d131b56131b6fb7a0291eacadd261e69dfb42a9cdf6f7fddd000000070003ec9b43b2a880000000000000000000000001000000019198a74bed93e968051bbdbd84a37a0a5c20c09c0000000b000000000000000000000001000000019198a74bed93e968051bbdbd84a37a0a5c20c09c0000000b000000000000000000000001000000019198a74bed93e968051bbdbd84a37a0a5c20c09c000f4240',
       'hex',
     ),
   },
@@ -93,6 +93,13 @@ const TEST_DATA = [
       'hex',
     ),
   },
+  {
+    name: 'base_tx',
+    blob: Buffer.from(
+      '0000000000220000007200000000000000000000000000000000000000000000000000000000000000000000000258734f94af871c3d131b56131b6fb7a0291eacadd261e69dfb42a9cdf6f7fddd00000007000000000098968000000000000000000000000100000001e82db275bf45d4a1fc48b1b05df9f758b9f10f4058734f94af871c3d131b56131b6fb7a0291eacadd261e69dfb42a9cdf6f7fddd00000007000000003af2f14000000000000000000000000100000001842e184fe5b9b7f87666bc687af517feabfd1da200000001256f3638bedcd15011f738fe5d0cad8b089863bb73144186a0daa61c2897eaf20000000058734f94af871c3d131b56131b6fb7a0291eacadd261e69dfb42a9cdf6f7fddd00000005000000003b9aca00000000010000000000000000',
+      'hex',
+    ),
+  },
 ]
 
 jest.setTimeout(120000)
@@ -106,7 +113,6 @@ describe.each(models)('Transactions', function (m) {
 
       const responseAddr = await app.getAddressAndPubKey(hdpath)
       expect(responseAddr.returnCode).toEqual(0x9000)
-      console.log(responseAddr)
 
       const pubKeyRaw = new Uint8Array(responseAddr.compressed_pk!)
       const pubKey = secp256k1.publicKeyConvert(pubKeyRaw, true)
@@ -119,7 +125,6 @@ describe.each(models)('Transactions', function (m) {
       await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-sign-${data.name}`)
 
       const signatureResponse = await signatureRequest
-      console.log(signatureResponse)
 
       expect(signatureResponse).toHaveProperty('s')
       expect(signatureResponse).toHaveProperty('r')
@@ -150,7 +155,6 @@ describe.each(models)('Transactions', function (m) {
 
       const responseAddr = await app.getAddressAndPubKey(hdpath)
       expect(responseAddr.returnCode).toEqual(0x9000)
-      console.log(responseAddr)
 
       const pubKeyRaw = new Uint8Array(responseAddr.compressed_pk!)
       const pubKey = secp256k1.publicKeyConvert(pubKeyRaw, true)
@@ -163,7 +167,6 @@ describe.each(models)('Transactions', function (m) {
       await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-sign-${data.name}-expert`)
 
       const signatureResponse = await signatureRequest
-      console.log(signatureResponse)
 
       expect(signatureResponse).toHaveProperty('s')
       expect(signatureResponse).toHaveProperty('r')
@@ -193,7 +196,6 @@ describe.each(models)('Transactions', function (m) {
 
       const responseAddr = await app.getAddressAndPubKey(hdpath)
       expect(responseAddr.returnCode).toEqual(0x9000)
-      console.log(responseAddr)
 
       const pubKeyRaw = new Uint8Array(responseAddr.compressed_pk!)
       const pubKey = secp256k1.publicKeyConvert(pubKeyRaw, true)
@@ -209,7 +211,6 @@ describe.each(models)('Transactions', function (m) {
       await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-sign-hash`, true, 0, 1500, true)
 
       const signatureResponse = await signatureRequest
-      console.log(signatureResponse)
 
       expect(signatureResponse).toHaveProperty('s')
       expect(signatureResponse).toHaveProperty('r')
@@ -236,7 +237,6 @@ describe.each(models)('Transactions', function (m) {
 
       const responseAddr = await app.getAddressAndPubKey(ETH_PATH)
       expect(responseAddr.returnCode).toEqual(0x9000)
-      console.log(responseAddr)
 
       const pubKeyRaw = new Uint8Array(responseAddr.compressed_pk!)
       const pubKey = secp256k1.publicKeyConvert(pubKeyRaw, true)
@@ -247,7 +247,6 @@ describe.each(models)('Transactions', function (m) {
       await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-sign-tx-eth-path`)
 
       const signatureResponse = await signatureRequest
-      console.log(signatureResponse)
 
       expect(signatureResponse).toHaveProperty('s')
       expect(signatureResponse).toHaveProperty('r')
