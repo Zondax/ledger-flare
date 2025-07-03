@@ -204,3 +204,17 @@ parser_error_t printHash(const parser_context_t *ctx, char *outVal, uint16_t out
     pageStringHex(outVal, outValLen, (const char *)hash, sizeof(hash), pageIdx, pageCount);
     return parser_ok;
 }
+
+parser_error_t printSubnetId(const uint8_t *subnetId, char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount) {
+    if (subnetId == NULL) {
+        return parser_unexpected_error;
+    }
+
+    char subnet_id_str[65] = {0};
+    for (int i = 0; i < BLOCKCHAIN_ID_LEN; i++) {
+        snprintf(subnet_id_str + (i * 2), 3, "%02x", subnetId[i]);
+    }
+
+    pageString(outVal, outValLen, subnet_id_str, pageIdx, pageCount);
+    return parser_ok;
+}

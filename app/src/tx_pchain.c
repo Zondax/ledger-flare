@@ -108,54 +108,94 @@ parser_error_t parser_handle_p_import_tx(parser_context_t *c, parser_tx_t *v) {
 
     return parser_ok;
 }
+// https://build.avax.network/docs/api-reference/p-chain/txn-format#unsigned-add-permissionless-validator-tx
+// https://build.avax.network/docs/api-reference/p-chain/txn-format#unsigned-add-permissionless-delegator-tx
+parser_error_t parser_handle_add_permissionless_delegator_validator(parser_context_t *c, parser_tx_t *v) {
+    if (v->tx_type == add_permissionless_validator_tx) {
+        CHECK_ERROR(parser_base_tx(c, &v->tx.add_permissionless_validator_tx.base_secp_ins, &v->tx.add_permissionless_validator_tx.base_secp_outs));
+    } else {
+        CHECK_ERROR(parser_base_tx(c, &v->tx.add_permissionless_delegator_tx.base_secp_ins, &v->tx.add_permissionless_delegator_tx.base_secp_outs));
+    }
 
-parser_error_t parser_handle_add_delegator_validator(parser_context_t *c, parser_tx_t *v) {
-    // Parse base tx
-    CHECK_ERROR(parser_base_tx(c, &v->tx.add_del_val_tx.base_secp_ins, &v->tx.add_del_val_tx.base_secp_outs));
+    validator_t *validator = (v->tx_type == add_permissionless_validator_tx) ? 
+        &v->tx.add_permissionless_validator_tx.validator : 
+        &v->tx.add_permissionless_delegator_tx.validator;
 
-    // Node ID
     CHECK_ERROR(verifyContext(c));
-    v->tx.add_del_val_tx.node_id = c->buffer + c->offset;
+    validator->node_id = c->buffer + c->offset;
     CHECK_ERROR(verifyBytes(c, NODE_ID_LEN));
 
-    // Get Start Time
-    CHECK_ERROR(read_u64(c, &v->tx.add_del_val_tx.start_time));
+    CHECK_ERROR(read_u64(c, &validator->start_time));
 
-    // Get End Time
-    CHECK_ERROR(read_u64(c, &v->tx.add_del_val_tx.end_time));
+    CHECK_ERROR(read_u64(c, &validator->end_time));
 
-    if (v->tx.add_del_val_tx.end_time <= v->tx.add_del_val_tx.start_time) {
+    if (validator->end_time <= validator->start_time) {
         return parser_invalid_time_stamp;
     }
 
-    // Get weight
-    CHECK_ERROR(read_u64(c, &v->tx.add_del_val_tx.weigth));
+    CHECK_ERROR(read_u64(c, &validator->weight));
 
-    // Get number of outputs
-    CHECK_ERROR(read_u32(c, &v->tx.add_del_val_tx.staked_outs.n_outs));
-    if (v->tx.add_del_val_tx.staked_outs.n_outs > MAX_OUTPUTS) {
+    CHECK_ERROR(verifyContext(c));
+    if (v->tx_type == add_permissionless_validator_tx) {
+        v->tx.add_permissionless_validator_tx.subnet_id = c->buffer + c->offset;
+    } else {
+        v->tx.add_permissionless_delegator_tx.subnet_id = c->buffer + c->offset;
+    }
+    CHECK_ERROR(verifyBytes(c, BLOCKCHAIN_ID_LEN));
+
+    if (v->tx_type == add_permissionless_validator_tx) {
+        CHECK_ERROR(read_u32(c, &v->tx.add_permissionless_validator_tx.signer.signer_type));
+        
+        if (v->tx.add_permissionless_validator_tx.signer.signer_type == PROOF_OF_POSSESSION_TYPE_ID) {
+            CHECK_ERROR(verifyContext(c));
+            v->tx.add_permissionless_validator_tx.signer.signer_data.proof_of_possession.public_key = c->buffer + c->offset;
+            CHECK_ERROR(verifyBytes(c, 48));
+            
+            CHECK_ERROR(verifyContext(c));
+            v->tx.add_permissionless_validator_tx.signer.signer_data.proof_of_possession.signature = c->buffer + c->offset;
+            CHECK_ERROR(verifyBytes(c, 96));
+        } else if (v->tx.add_permissionless_validator_tx.signer.signer_type != EMPTY_SIGNER_TYPE_ID) {
+            return parser_unexpected_type;
+        }
+    }
+
+    transferable_out_secp_t *stake_outs = (v->tx_type == add_permissionless_validator_tx) ? 
+        &v->tx.add_permissionless_validator_tx.stake_outs : 
+        &v->tx.add_permissionless_delegator_tx.stake_outs;
+
+    CHECK_ERROR(read_u32(c, &stake_outs->n_outs));
+    if (stake_outs->n_outs > MAX_OUTPUTS) {
         return parser_unexpected_number_items;
     }
 
-    // Pointer to outputs
     CHECK_ERROR(verifyContext(c));
-    v->tx.add_del_val_tx.staked_outs.outs = c->buffer + c->offset;
-    CHECK_ERROR(parse_transferable_secp_output(c, &v->tx.add_del_val_tx.staked_outs, false));
+    stake_outs->outs = c->buffer + c->offset;
+    CHECK_ERROR(parse_transferable_secp_output(c, stake_outs, false));
 
-    if (v->tx.add_del_val_tx.weigth != v->tx.add_del_val_tx.staked_outs.out_sum) {
+    if (validator->weight != stake_outs->out_sum) {
         return parser_invalid_stake_amount;
     }
 
-    // Pointer to owners output
-    CHECK_ERROR(verifyContext(c));
-    v->tx.add_del_val_tx.owners_out.outs = c->buffer + c->offset;
-    v->tx.add_del_val_tx.owners_out.n_outs = 1;
-    CHECK_ERROR(parse_secp_owners_output(c, &v->tx.add_del_val_tx.owners_out));
-
-    if (v->tx_type == add_validator_tx) {
-        // Get shares
-        CHECK_ERROR(read_u32(c, &v->tx.add_del_val_tx.shares));
+    if (v->tx_type == add_permissionless_validator_tx) {
+        CHECK_ERROR(verifyContext(c));
+        v->tx.add_permissionless_validator_tx.validator_rewards_owner.outs = c->buffer + c->offset;
+        v->tx.add_permissionless_validator_tx.validator_rewards_owner.n_outs = 1;
+        CHECK_ERROR(parse_secp_owners_output(c, &v->tx.add_permissionless_validator_tx.validator_rewards_owner));
     }
+
+    secp_owners_out_t *delegator_rewards_owner = (v->tx_type == add_permissionless_validator_tx) ? 
+        &v->tx.add_permissionless_validator_tx.delegator_rewards_owner : 
+        &v->tx.add_permissionless_delegator_tx.delegator_rewards_owner;
+
+    CHECK_ERROR(verifyContext(c));
+    delegator_rewards_owner->outs = c->buffer + c->offset;
+    delegator_rewards_owner->n_outs = 1;
+    CHECK_ERROR(parse_secp_owners_output(c, delegator_rewards_owner));
+
+    if (v->tx_type == add_permissionless_validator_tx) {
+        CHECK_ERROR(read_u32(c, &v->tx.add_permissionless_validator_tx.delegation_shares));
+    }
+
     return parser_ok;
 }
 
@@ -167,68 +207,13 @@ parser_error_t parser_pchain(parser_context_t *c, parser_tx_t *v) {
         case p_import_tx:
             return parser_handle_p_import_tx(c, v);
             break;
-        case add_delegator_tx:
-        case add_validator_tx:
-            return parser_handle_add_delegator_validator(c, v);
+        case add_permissionless_delegator_tx:
+        case add_permissionless_validator_tx:
+            return parser_handle_add_permissionless_delegator_validator(c, v);
             break;
         default:
             return parser_unexpected_type;
             break;
-    }
-
-    return parser_ok;
-}
-
-parser_error_t print_add_del_val_tx(const parser_context_t *ctx, uint8_t displayIdx, char *outKey, uint16_t outKeyLen,
-                                    char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount) {
-    if (ctx->tx_obj->tx_type == add_delegator_tx && displayIdx >= 5) {
-        displayIdx += 1;
-    }
-
-    switch (displayIdx) {
-        case 0:
-            snprintf(outKey, outKeyLen, "Validator");
-            CHECK_ERROR(printNodeId(ctx->tx_obj->tx.add_del_val_tx.node_id, outVal, outValLen, pageIdx, pageCount));
-            break;
-        case 1:
-            snprintf(outKey, outKeyLen, "Start time");
-            CHECK_ERROR(printTimestamp(ctx->tx_obj->tx.add_del_val_tx.start_time, outVal, outValLen, pageIdx, pageCount));
-            break;
-        case 2:
-            snprintf(outKey, outKeyLen, "End time");
-            CHECK_ERROR(printTimestamp(ctx->tx_obj->tx.add_del_val_tx.end_time, outVal, outValLen, pageIdx, pageCount));
-            break;
-        case 3:
-            snprintf(outKey, outKeyLen, "Total stake");
-            CHECK_ERROR(printAmount64(ctx->tx_obj->tx.add_del_val_tx.staked_outs.out_sum, AMOUNT_DECIMAL_PLACES,
-                                      ctx->tx_obj->network_id, outVal, outValLen, pageIdx, pageCount));
-            break;
-        case 4:
-            snprintf(outKey, outKeyLen, "Rewards to");
-            CHECK_ERROR(printAddress(ctx->tx_obj->tx.add_del_val_tx.owners_out.addr, ctx->tx_obj->network_id, outVal,
-                                     outValLen, pageIdx, pageCount));
-            break;
-        case 5:
-            snprintf(outKey, outKeyLen, "Delegate fee");
-            char tmp[ADDRESS_LEN] = {0};
-            snprintf(tmp, ADDRESS_LEN, "%d %%", ctx->tx_obj->tx.add_del_val_tx.shares / SHARES_DIVISON_BASE);
-            pageString(outVal, outValLen, (const char *)&tmp, pageIdx, pageCount);
-            break;
-        case 6:
-            snprintf(outKey, outKeyLen, "Fee");
-            uint64_t fee =
-                ctx->tx_obj->tx.add_del_val_tx.base_secp_ins.in_sum -
-                (ctx->tx_obj->tx.add_del_val_tx.base_secp_outs.out_sum + ctx->tx_obj->tx.add_del_val_tx.staked_outs.out_sum);
-            CHECK_ERROR(
-                printAmount64(fee, AMOUNT_DECIMAL_PLACES, ctx->tx_obj->network_id, outVal, outValLen, pageIdx, pageCount));
-            break;
-        default:
-            if (app_mode_expert() && displayIdx == 7) {
-                snprintf(outKey, outKeyLen, "Hash");
-                printHash(ctx, outVal, outValLen, pageIdx, pageCount);
-                return parser_ok;
-            }
-            return parser_display_idx_out_of_range;
     }
 
     return parser_ok;
@@ -348,4 +333,76 @@ parser_error_t print_p_import_tx(const parser_context_t *ctx, uint8_t displayIdx
     }
 
     return parser_display_idx_out_of_range;
+}
+
+parser_error_t print_add_permissionless_del_val_tx(const parser_context_t *ctx, uint8_t displayIdx, char *outKey, uint16_t outKeyLen,
+                                    char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount) {
+    const validator_t *validator = (ctx->tx_obj->tx_type == add_permissionless_validator_tx) ? 
+        &ctx->tx_obj->tx.add_permissionless_validator_tx.validator : 
+        &ctx->tx_obj->tx.add_permissionless_delegator_tx.validator;
+
+    switch (displayIdx) {
+        case 0:
+            snprintf(outKey, outKeyLen, "Validator");
+            CHECK_ERROR(printNodeId(validator->node_id, outVal, outValLen, pageIdx, pageCount));
+            break;
+        case 1:
+            snprintf(outKey, outKeyLen, "Start time");
+            CHECK_ERROR(printTimestamp(validator->start_time, outVal, outValLen, pageIdx, pageCount));
+            break;
+        case 2:
+            snprintf(outKey, outKeyLen, "End time");
+            CHECK_ERROR(printTimestamp(validator->end_time, outVal, outValLen, pageIdx, pageCount));
+            break;
+        case 3:
+            snprintf(outKey, outKeyLen, "Total stake");
+            CHECK_ERROR(printAmount64(validator->weight, AMOUNT_DECIMAL_PLACES, ctx->tx_obj->network_id, outVal, outValLen, pageIdx, pageCount));
+            break;
+        case 4:
+            if (ctx->tx_obj->tx_type == add_permissionless_validator_tx) {
+                snprintf(outKey, outKeyLen, "Rewards to");
+                CHECK_ERROR(printAddress(ctx->tx_obj->tx.add_permissionless_validator_tx.validator_rewards_owner.addr, ctx->tx_obj->network_id, outVal, outValLen, pageIdx, pageCount));
+            } else {
+                snprintf(outKey, outKeyLen, "Rewards to");
+                CHECK_ERROR(printAddress(ctx->tx_obj->tx.add_permissionless_delegator_tx.delegator_rewards_owner.addr, ctx->tx_obj->network_id, outVal, outValLen, pageIdx, pageCount));
+            }
+            break;
+        case 5:
+            if (ctx->tx_obj->tx_type == add_permissionless_validator_tx) {
+                snprintf(outKey, outKeyLen, "Delegate fee");
+                uint32_t shares = ctx->tx_obj->tx.add_permissionless_validator_tx.delegation_shares;
+                snprintf(outVal, outValLen, "%u %%", shares / 10000);
+                break;
+            } else {
+                snprintf(outKey, outKeyLen, "Fee");
+                uint64_t fee = ctx->tx_obj->tx.add_permissionless_delegator_tx.base_secp_ins.in_sum -
+                               (ctx->tx_obj->tx.add_permissionless_delegator_tx.base_secp_outs.out_sum + 
+                                ctx->tx_obj->tx.add_permissionless_delegator_tx.stake_outs.out_sum);
+                CHECK_ERROR(printAmount64(fee, AMOUNT_DECIMAL_PLACES, ctx->tx_obj->network_id, outVal, outValLen, pageIdx, pageCount));
+                break;
+            }
+        case 6:
+            if (ctx->tx_obj->tx_type == add_permissionless_validator_tx) {
+                snprintf(outKey, outKeyLen, "Fee");
+                uint64_t fee = ctx->tx_obj->tx.add_permissionless_validator_tx.base_secp_ins.in_sum -
+                               (ctx->tx_obj->tx.add_permissionless_validator_tx.base_secp_outs.out_sum + 
+                                ctx->tx_obj->tx.add_permissionless_validator_tx.stake_outs.out_sum);
+                CHECK_ERROR(printAmount64(fee, AMOUNT_DECIMAL_PLACES, ctx->tx_obj->network_id, outVal, outValLen, pageIdx, pageCount));
+            } else {
+                snprintf(outKey, outKeyLen, "Hash");
+                printHash(ctx, outVal, outValLen, pageIdx, pageCount);
+            }
+            break;
+        case 7:
+            if (ctx->tx_obj->tx_type == add_permissionless_validator_tx) {
+                snprintf(outKey, outKeyLen, "Hash");
+                printHash(ctx, outVal, outValLen, pageIdx, pageCount);
+            } else {
+                return parser_display_idx_out_of_range;
+            }
+            break;
+        default:
+            return parser_display_idx_out_of_range;
+    }
+    return parser_ok;
 }

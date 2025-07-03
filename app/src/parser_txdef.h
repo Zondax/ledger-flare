@@ -51,8 +51,8 @@ extern "C" {
 #define P_CHAIN_EXPORT_TX 0x00000012
 #define P_CHAIN_IMPORT_TX 0x00000011
 #define C_CHAIN_EXPORT_TX 0x00000001
-#define ADD_DELEGATOR_TX 0x0000000e
-#define ADD_VALIDATOR_TX 0x0000000c
+#define ADD_PERMISSIONLESS_VALIDATOR_TX 0x00000019
+#define ADD_PERMISSIONLESS_DELEGATOR_TX 0x0000001a
 
 #define MAINNET_ID 14
 #define COSTON_ID 7
@@ -82,8 +82,8 @@ typedef enum {
     p_export_tx,
     c_import_tx,
     c_export_tx,
-    add_validator_tx,
-    add_delegator_tx,
+    add_permissionless_validator_tx,
+    add_permissionless_delegator_tx,
 } tx_type_e;
 
 typedef struct {
@@ -159,35 +159,66 @@ typedef struct {
     transferable_out_secp_t secp_outs;
 } c_export_tx_t;
 
+#define EMPTY_SIGNER_TYPE_ID 0x1B
+#define PROOF_OF_POSSESSION_TYPE_ID 0x1C
+
 typedef struct {
-    transferable_out_secp_t base_secp_outs;
-    transferable_in_secp_t base_secp_ins;
+    const uint8_t *public_key;
+    const uint8_t *signature;
+} proof_of_possession_t;
+
+typedef struct {
+    uint32_t signer_type;
+    union {
+        struct {
+            // Empty on purpose
+        } empty_signer;
+        proof_of_possession_t proof_of_possession;
+    } signer_data;
+} signer_t;
+
+typedef struct {
     const uint8_t *node_id;
     uint64_t start_time;
     uint64_t end_time;
-    uint64_t weigth;
-    transferable_out_secp_t staked_outs;
-    secp_owners_out_t owners_out;
-    uint32_t shares;
-} p_add_del_val_tx;
+    uint64_t weight;
+} validator_t;
 
-// Transactions union and common parameters
+typedef struct {
+    transferable_out_secp_t base_secp_outs;
+    transferable_in_secp_t base_secp_ins;
+    validator_t validator;
+    const uint8_t *subnet_id;
+    signer_t signer;
+    transferable_out_secp_t stake_outs;
+    secp_owners_out_t validator_rewards_owner;
+    secp_owners_out_t delegator_rewards_owner;
+    uint32_t delegation_shares;
+} p_add_permissionless_validator_tx_t;
+
+typedef struct {
+    transferable_out_secp_t base_secp_outs;
+    transferable_in_secp_t base_secp_ins;
+    validator_t validator;
+    const uint8_t *subnet_id;
+    transferable_out_secp_t stake_outs;
+    secp_owners_out_t delegator_rewards_owner;
+} p_add_permissionless_delegator_tx_t;
+
 typedef union tx_command {
     p_import_tx_t p_import_tx;
     p_export_tx_t p_export_tx;
     c_import_tx_t c_import_tx;
     c_export_tx_t c_export_tx;
-    p_add_del_val_tx add_del_val_tx;
+    p_add_permissionless_validator_tx_t add_permissionless_validator_tx;
+    p_add_permissionless_delegator_tx_t add_permissionless_delegator_tx;
 } tx_t;
 
 typedef struct {
-    // tx identificaiton
     tx_type_e tx_type;
     network_id_e network_id;
     const uint8_t *blockchain_id;
     chain_id_e chain_id;
-
-    // transactions specific
     tx_t tx;
 } parser_tx_t;
 

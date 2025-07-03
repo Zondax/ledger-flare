@@ -38,6 +38,9 @@ parser_error_t printTimestamp(uint64_t timestamp, char *outVal, uint16_t outValL
 parser_error_t printNodeId(const uint8_t *nodeId, char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount);
 
 parser_error_t printHash(const parser_context_t *ctx, char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount);
+
+parser_error_t printSubnetId(const uint8_t *subnetId, char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount);
+
 #ifdef __cplusplus
 }
 

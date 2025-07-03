@@ -77,11 +77,11 @@ static parser_error_t parser_map_tx_type(parser_context_t *c, parser_tx_t *v) {
         case C_CHAIN_IMPORT_TX:
             v->tx_type = c_import_tx;
             break;
-        case ADD_DELEGATOR_TX:
-            v->tx_type = add_delegator_tx;
+        case ADD_PERMISSIONLESS_DELEGATOR_TX:
+            v->tx_type = add_permissionless_delegator_tx;
             break;
-        case ADD_VALIDATOR_TX:
-            v->tx_type = add_validator_tx;
+        case ADD_PERMISSIONLESS_VALIDATOR_TX:
+            v->tx_type = add_permissionless_validator_tx;
             break;
         default:
             return parser_unknown_transaction;
@@ -176,10 +176,10 @@ parser_error_t getNumItems(const parser_context_t *ctx, uint8_t *numItems) {
             // Tx + fee + (amount + address) * n_outs
             *numItems = 2 + (2 * ctx->tx_obj->tx.c_import_tx.evm_outs.n_outs) + expertModeHashField;
             break;
-        case add_delegator_tx:
+        case add_permissionless_delegator_tx:
             *numItems = 6 + expertModeHashField;
             break;
-        case add_validator_tx:
+        case add_permissionless_validator_tx:
             *numItems = 7 + expertModeHashField;
             break;
         default:
