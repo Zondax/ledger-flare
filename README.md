@@ -11,20 +11,27 @@ _Please visit our website at [zondax.ch](https://www.zondax.ch)_
 
 ---
 
-This project contains the Flare app for Ledger Nano S, Nano S+, Nano X, Stax and Flex.
+This project contains the Flare app for Ledger Nano S+, Nano X, Stax and Flex.
 
-- Ledger Nano S/S+/X, Stax and Flex Flare app
+- Ledger Nano S+/X, Stax and Flex Flare app
 - Specs / Documentation
 - C++ unit tests
 - Zemu tests
 
 ## ATTENTION
 
-Please:
+The app releases of this repository and the binaries you can build yourself with this repo
+are considered unvetted development releases, use with caution.
 
-- **Do not use in production**
-- **Do not use a Ledger device with funds for development purposes.**
-- **Have a separate and marked device that is used ONLY for development and testing**
+The releases provided by Ledger via Ledger Live have undergone Ledger's security assessment
+and thus are safe to use with real funds.
+
+If you wish to use a development release, we recommend the following:
+- Do not use in production
+- Do not use a Ledger device with funds for development purposes
+- Do use a separate and marked device that is used ONLY for development and testing
+
+Nevertheless, this disclaimer does not apply to the client libraries provided in this repository.
 
 
 ## Download and install a prerelease
@@ -109,6 +116,18 @@ If you see conan is not found, check that you installed the package in the same 
     Use Zemu! Explained below!
     ```
 
+- Running everything
+
+  If you don't want to bother typing all those make commands by hand, you can skip them all!
+
+  The only command you have to type is:
+  ```sh
+  make test_all
+  ```
+  This will initially run unit and integration tests (needs `rust` installed!), then install Zemu for you,
+  clean the app's build files in case there's anything, proceed to build both application types
+  and finally run the Zemu test suite.
+
 ## How to test with Zemu?
 
 > What is Zemu?? Great you asked!!
@@ -179,23 +198,23 @@ Many of our integration tests expect the device to be configured with a known te
 
 - Enter your pin if necessary
 
-- Run `make dev_ca`. The device will receive a development certificate to avoid constant manual confirmations.
+- Run `make dev_caS2`. The device will receive a development certificate to avoid constant manual confirmations.
 
 
 ### Loading into your development device
 
-The Makefile will build the firmware in a docker container and leave the binary in the correct directory.
+The Makefile will build the firmware in a docker container and leave the binary in the correct directory. this example is for NanoS+.
 
 - Build
 
    ```
-   make                # Builds the app
+   make buildS2                # Builds the app
    ```
 
 - Upload to a device
    The following command will upload the application to the ledger. _Warning: The application will be deleted before uploading._
    ```
-   make load          # Builds and loads the app to the device
+   make loadS2          # Builds and loads the app to the device
    ```
 
 ## APDU Specifications

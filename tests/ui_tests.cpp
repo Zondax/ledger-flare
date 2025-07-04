@@ -15,9 +15,7 @@
  ********************************************************************************/
 
 #include <hexutils.h>
-#include <json/config.h>
-#include <json/reader.h>
-#include <json/value.h>
+#include <nlohmann/json.hpp>
 #include <parser_txdef.h>
 
 #include <algorithm>
@@ -59,9 +57,6 @@ class JsonTestsA : public ::testing::TestWithParam<testcase_t> {
 std::vector<testcase_t> GetJsonTestCases(std::string jsonFile) {
     auto answer = std::vector<testcase_t>();
 
-    const Json::CharReaderBuilder builder;
-    Json::Value obj;
-
     const std::string fullPathJsonFile = std::string(TESTVECTORS_DIR) + jsonFile;
 
     std::ifstream inFile(fullPathJsonFile);
@@ -70,23 +65,26 @@ std::vector<testcase_t> GetJsonTestCases(std::string jsonFile) {
     }
 
     // Retrieve all test cases
-    JSONCPP_STRING errs;
-    Json::parseFromStream(builder, inFile, &obj, &errs);
+    nlohmann::json obj;
+    inFile >> obj;
     std::cout << "Number of testcases: " << obj.size() << std::endl;
 
     for (int i = 0; i < obj.size(); i++) {
         auto outputs = std::vector<std::string>();
         for (auto s : obj[i]["output"]) {
-            outputs.push_back(s.asString());
+            outputs.push_back(s.get<std::string>());
         }
 
         auto outputs_expert = std::vector<std::string>();
         for (auto s : obj[i]["output_expert"]) {
-            outputs_expert.push_back(s.asString());
+            outputs_expert.push_back(s.get<std::string>());
         }
 
-        answer.push_back(testcase_t{obj[i]["index"].asUInt64(), obj[i]["name"].asString(), obj[i]["blob"].asString(),
-                                    outputs, outputs_expert});
+        uint64_t index = getUint64Value(obj[i], "index", 0);
+        std::string name = getStringValue(obj[i], "name", "");
+        std::string blob = getStringValue(obj[i], "blob", "");
+        
+        answer.push_back(testcase_t{index, name, blob, outputs, outputs_expert});
     }
 
     return answer;
@@ -106,9 +104,6 @@ template <typename Generator>
 std::vector<testcase_t> GetEVMJsonTestCases(const std::string &jsonFile, Generator gen_ui_output) {
     auto answer = std::vector<testcase_t>();
 
-    const Json::CharReaderBuilder builder;
-    Json::Value obj;
-
     const std::string fullPathJsonFile = std::string(TESTVECTORS_DIR) + jsonFile;
 
     std::ifstream inFile(fullPathJsonFile);
@@ -116,9 +111,8 @@ std::vector<testcase_t> GetEVMJsonTestCases(const std::string &jsonFile, Generat
         return answer;
     }
 
-    // Retrieve all test cases
-    JSONCPP_STRING errs;
-    Json::parseFromStream(builder, inFile, &obj, &errs);
+    nlohmann::json obj;
+    inFile >> obj;
     std::cout << "Number of testcases: " << obj.size() << std::endl;
 
     for (auto &i : obj) {
@@ -127,9 +121,10 @@ std::vector<testcase_t> GetEVMJsonTestCases(const std::string &jsonFile, Generat
         auto outputs = gen_ui_output(i, false);
         auto outputs_expert = gen_ui_output(i, true);
 
-        auto name = CleanTestname(i["description"].asString());
+        auto name = CleanTestname(getStringValue(i, "description", ""));
+        auto encoded_tx_hex = getStringValue(i, "encoded_tx_hex", "");
 
-        answer.push_back(testcase_t{answer.size() + 1, name, i["encoded_tx_hex"].asString(), outputs, outputs_expert});
+        answer.push_back(testcase_t{answer.size() + 1, name, encoded_tx_hex, outputs, outputs_expert});
     }
 
     return answer;

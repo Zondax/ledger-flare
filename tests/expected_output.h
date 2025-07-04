@@ -14,9 +14,17 @@
  *  limitations under the License.
  ********************************************************************************/
 #pragma once
-#include <json/json.h>
+#include <nlohmann/json.hpp>
 
 #include <fstream>
 #include <vector>
+#include <string>
+#include <cstdint>
 
-std::vector<std::string> EVMGenerateExpectedUIOutput(const Json::Value &json, bool expertMode);
+// Helper function to safely get string from JSON value (handles both string and number types)
+std::string getStringValue(const nlohmann::json &obj, const std::string &key, const std::string &defaultValue = "");
+
+// Helper function to safely get uint64_t from JSON value
+uint64_t getUint64Value(const nlohmann::json &obj, const std::string &key, uint64_t defaultValue = 0);
+
+std::vector<std::string> EVMGenerateExpectedUIOutput(const nlohmann::json &json, bool expertMode);

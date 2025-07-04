@@ -23,10 +23,8 @@
 #include "parser.h"
 #include "zxmacros.h"
 
-#if defined(LEDGER_SPECIFIC)
 #define RAM_BUFFER_SIZE 8192
 #define FLASH_BUFFER_SIZE 16384
-#endif
 
 // Ram
 uint8_t ram_buffer[RAM_BUFFER_SIZE];
@@ -36,10 +34,8 @@ typedef struct {
     uint8_t buffer[FLASH_BUFFER_SIZE];
 } storage_t;
 
-#if defined(LEDGER_SPECIFIC)
 storage_t NV_CONST N_appdata_impl __attribute__((aligned(64)));
 #define N_appdata (*(NV_VOLATILE storage_t *)PIC(&N_appdata_impl))
-#endif
 
 static parser_tx_t tx_obj;
 static parser_context_t ctx_parsed_tx;

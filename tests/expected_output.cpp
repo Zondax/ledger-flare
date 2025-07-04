@@ -16,15 +16,45 @@
 
 #include <coin.h>
 #include <fmt/core.h>
+#include <nlohmann/json.hpp>
 
 #include <cstdint>
 #include <string>
 #include <vector>
 
-#include "json/value.h"
 #include "zxformat.h"
 #include "zxmacros_x64.h"
 const uint32_t fieldSize = 39;
+
+// Helper function to safely get string from JSON value (handles both string and number types)
+std::string getStringValue(const nlohmann::json &obj, const std::string &key, const std::string &defaultValue = "") {
+    if (!obj.contains(key)) {
+        return defaultValue;
+    }
+    if (obj[key].is_string()) {
+        return obj[key].get<std::string>();
+    } else if (obj[key].is_number()) {
+        return std::to_string(obj[key].get<uint64_t>());
+    }
+    return defaultValue;
+}
+
+// Helper function to safely get uint64_t from JSON value
+uint64_t getUint64Value(const nlohmann::json &obj, const std::string &key, uint64_t defaultValue = 0) {
+    if (!obj.contains(key)) {
+        return defaultValue;
+    }
+    if (obj[key].is_number()) {
+        return obj[key].get<uint64_t>();
+    } else if (obj[key].is_string()) {
+        try {
+            return std::stoull(obj[key].get<std::string>());
+        } catch (...) {
+            return defaultValue;
+        }
+    }
+    return defaultValue;
+}
 
 template <typename S, typename... Args>
 void addTo(std::vector<std::string> &answer, const S &format_str, Args &&...args) {
@@ -61,29 +91,29 @@ std::string FormatAmount(const std::string &amount) {
     return std::string(buffer);
 }
 
-std::vector<std::string> EVMGenerateExpectedUIOutput(const Json::Value &json, bool) {
+std::vector<std::string> EVMGenerateExpectedUIOutput(const nlohmann::json &json, bool) {
     auto answer = std::vector<std::string>();
 
     ///
-    auto description = json["description"].asString();
-    auto message = json["message"];
-    auto receiver = message["Receiver"].asString();
-    auto contract = message["Contract"].asString();
-    auto amount = message["Amount"].asString();
-    auto nonce = message["Nonce"].asString();
+    auto description = getStringValue(json, "description");
+    auto message = json.value("message", nlohmann::json());
+    auto receiver = getStringValue(message, "Receiver");
+    auto contract = getStringValue(message, "Contract");
+    auto amount = getStringValue(message, "Amount");
+    auto nonce = getStringValue(message, "Nonce");
     auto maxFee = std::string();
     auto maxPriorityFee = std::string();
     auto gasPrice = std::string();
     if (description.find("eip1559") != std::string::npos) {
-        maxFee = message["MaxFeePerGas"].asString();
-        maxPriorityFee = message["MaxPriorityFeePerGas"].asString();
+        maxFee = getStringValue(message, "MaxFeePerGas");
+        maxPriorityFee = getStringValue(message, "MaxPriorityFeePerGas");
     } else {
-        gasPrice = message["GasPrice"].asString();
+        gasPrice = getStringValue(message, "GasPrice");
     }
-    auto gasLimit = message["GasLimit"].asString();
-    auto value = message["Value"].asString();
-    auto txhash = message["Eth-Hash"].asString();
-    auto data = message["Data"].asString();
+    auto gasLimit = getStringValue(message, "GasLimit");
+    auto value = getStringValue(message, "Value");
+    auto txhash = getStringValue(message, "Eth-Hash");
+    auto data = getStringValue(message, "Data");
     ///
 
     uint8_t idx = 0;

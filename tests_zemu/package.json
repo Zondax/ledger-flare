@@ -27,6 +27,7 @@
     "@ethereumjs/tx": "^10.0.0",
     "@types/elliptic": "^6.4.14",
     "@types/jest": "^30.0.0",
+    "@types/node": "^20.0.0",
     "@types/secp256k1": "^4.0.6",
     "@typescript-eslint/eslint-plugin": "^8.18.1",
     "@typescript-eslint/parser": "^8.18.1",
