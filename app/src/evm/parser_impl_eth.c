@@ -227,7 +227,7 @@ static parser_error_t printEthHash(const parser_context_t *ctx, char *outKey, ui
                                    uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount) {
     // we need to get keccak hash of the transaction data
     uint8_t hash[32] = {0};
-#if defined(TARGET_NANOS) || defined(TARGET_NANOS2) || defined(TARGET_NANOX) || defined(TARGET_STAX) || defined(TARGET_FLEX)
+#if defined(LEDGER_SPECIFIC)
     keccak_digest(ctx->buffer, ctx->bufferLen, hash, 32);
 #endif
 
