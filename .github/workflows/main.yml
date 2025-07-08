@@ -84,7 +84,6 @@ jobs:
 
   build_package_nanosp:
     needs: [configure, build, build_ledger, test_zemu]
-    if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     container:
       image: zondax/ledger-app-builder:latest
@@ -97,7 +96,7 @@ jobs:
         with:
           submodules: true
       - name: Install deps
-        run: pip install ledgerblue
+        run: pip install ledgerblue --break-system-packages
 
       - name: Build NanoSP
         shell: bash -l {0}
@@ -108,6 +107,7 @@ jobs:
         id: nanosp
         run: echo "tag_name=$(./app/pkg/installer_nanos_plus.sh version)" >> $GITHUB_OUTPUT
       - name: Update Release
+        if: ${{ github.ref == 'refs/heads/main' }}
         id: update_release_2
         uses: softprops/action-gh-release@v1
         env:
@@ -120,7 +120,6 @@ jobs:
 
   build_package_stax:
     needs: [configure, build, build_ledger, test_zemu]
-    if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     container:
       image: zondax/ledger-app-builder:latest
@@ -133,7 +132,7 @@ jobs:
         with:
           submodules: true
       - name: Install deps
-        run: pip install ledgerblue
+        run: pip install ledgerblue --break-system-packages
 
       - name: Build Stax
         shell: bash -l {0}
@@ -142,6 +141,7 @@ jobs:
         id: stax
         run: echo "tag_name=$(./app/pkg/installer_stax.sh version)" >> $GITHUB_OUTPUT
       - name: Update Release
+        if: ${{ github.ref == 'refs/heads/main' }}
         id: update_release_2
         uses: softprops/action-gh-release@v1
         env:
@@ -154,7 +154,6 @@ jobs:
 
   build_package_flex:
     needs: [configure, build, build_ledger, test_zemu]
-    if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     container:
       image: zondax/ledger-app-builder:latest
@@ -167,7 +166,7 @@ jobs:
         with:
           submodules: true
       - name: Install deps
-        run: pip install ledgerblue
+        run: pip install ledgerblue --break-system-packages
 
       - name: Build Flex
         shell: bash -l {0}
@@ -176,6 +175,7 @@ jobs:
         id: flex
         run: echo "tag_name=$(./app/pkg/installer_flex.sh version)" >> $GITHUB_OUTPUT
       - name: Update Release
+        if: ${{ github.ref == 'refs/heads/main' }}
         id: update_release_2
         uses: softprops/action-gh-release@v1
         env:
