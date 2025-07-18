@@ -265,4 +265,95 @@ describe.each(models)('Transactions', function (m) {
       await sim.close()
     }
   })
+
+  test.concurrent('Multiple Signatures', async function () {
+    const sim = new Zemu(m.path)
+    try {
+      await sim.start({ ...defaultOptions, model: m.name })
+      const app = new FlareApp(sim.getTransport())
+
+      const responseAddr = await app.getAddressAndPubKey(hdpath)
+      expect(responseAddr.returnCode).toEqual(0x9000)
+
+      const pubKeyRaw = new Uint8Array(responseAddr.compressed_pk!)
+      const pubKey = secp256k1.publicKeyConvert(pubKeyRaw, true)
+
+       const blob1 = Buffer.from(
+      '0000000000010000007278db5c30bed04c05ce209179812850bbb3fe6d46d7eef3744d814c0da55524790000000000000000000000000000000000000000000000000000000000000000000000015a6a8c28a2fc040df3b7490440c50f00099c957a000000028fb5f04058734f94af871c3d131b56131b6fb7a0291eacadd261e69dfb42a9cdf6f7fddd000000000000001c0000000158734f94af871c3d131b56131b6fb7a0291eacadd261e69dfb42a9cdf6f7fddd0000000700000002541b264000000000000000000000000100000001db89a2339639a5f3fa183258cfea265e4d1cce6c',
+      'hex')
+
+      // do not wait here.. we need to navigate
+      const signatureRequest1 = app.sign(hdpath, blob1)
+
+      // Wait until we are not in the main menu
+      await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
+      const lastSnapshotIdx = await sim.navigateUntilText(
+        '.',
+        `${m.prefix.toLowerCase()}-multiple_signatures`,
+        sim.startOptions.approveKeyword,
+        true,
+        true,
+        0,
+        15000,
+        true,
+        true,
+        false
+      );
+
+      if (isTouchDevice(sim.startOptions.model)) {
+        // Avoid taking a snapshot of the final animation
+        await sim.waitUntilScreenIs(sim.mainMenuSnapshot);
+        await sim.takeSnapshotAndOverwrite('.', `${m.prefix.toLowerCase()}-multiple_signatures`, lastSnapshotIdx);
+      }
+
+      sim.compareSnapshots('.', `${m.prefix.toLowerCase()}-multiple_signatures`, lastSnapshotIdx);
+
+      const signatureResponse1 = await signatureRequest1
+
+      expect(signatureResponse1).toHaveProperty('s')
+      expect(signatureResponse1).toHaveProperty('r')
+      expect(signatureResponse1).toHaveProperty('v')
+
+      let EC = new ec('secp256k1')
+      const signature_obj1 = {
+        r: signatureResponse1.r!,
+        s: signatureResponse1.s!,
+      }
+      // Now verify the signature
+      const message1 = createHash('sha256').update(blob1).digest()
+      const valid1 = EC.verify(message1, signature_obj1, Buffer.from(pubKey), 'hex')
+      expect(valid1).toEqual(true)
+
+      // deleteEvents to start second signature
+      await sim.deleteEvents()
+
+       const blob2 = Buffer.from(
+      '0000000000110000007200000000000000000000000000000000000000000000000000000000000000000000000158734f94af871c3d131b56131b6fb7a0291eacadd261e69dfb42a9cdf6f7fddd0000000700000002540be40000000000000000000000000100000001db89a2339639a5f3fa183258cfea265e4d1cce6c000000000000000078db5c30bed04c05ce209179812850bbb3fe6d46d7eef3744d814c0da55524790000000114303038e53caca8410bed68d5dd0f8e3a397d6e64657d83319133490fb5cd9b0000000058734f94af871c3d131b56131b6fb7a0291eacadd261e69dfb42a9cdf6f7fddd0000000500000002541b26400000000100000000',
+      'hex')
+
+      const signatureRequest2 = app.sign(hdpath, blob2)
+
+      // Wait until we are not in the main menu
+      await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
+      await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-multiple_signatures`, true, lastSnapshotIdx + 1)
+
+      const signatureResponse2 = await signatureRequest2
+
+      expect(signatureResponse2).toHaveProperty('s')
+      expect(signatureResponse2).toHaveProperty('r')
+      expect(signatureResponse2).toHaveProperty('v')
+
+      EC = new ec('secp256k1')
+      const signature_obj2 = {
+        r: signatureResponse2.r!,
+        s: signatureResponse2.s!,
+      }
+      // Now verify the signature
+      const message2 = createHash('sha256').update(blob2).digest()
+      const valid2 = EC.verify(message2, signature_obj2, Buffer.from(pubKey), 'hex')
+      expect(valid2).toEqual(true)
+    } finally {
+      await sim.close()
+    }
+  })
 })
