@@ -51,6 +51,53 @@ const char *parser_getErrorDescription(parser_error_t err) {
         case parser_display_page_out_of_range:
             return "display page out of range";
 
+        /* Generic errors */
+        case parser_unexpected_error:
+            return "Unexpected error";
+
+        /* Coin generic */
+        case parser_unexpected_type:
+            return "Unexpected type";
+        case parser_unexpected_method:
+            return "Unexpected method";
+        case parser_unexpected_value:
+            return "Unexpected value";
+        case parser_unexpected_number_items:
+            return "Unexpected number of items";
+        case parser_invalid_address:
+            return "Invalid address";
+        case parser_unknown_transaction:
+            return "Unknown transaction";
+
+        /* Utils specific */
+        case parser_unexpected_data_len:
+            return "Unexpected data length";
+        case parser_invalid_codec:
+            return "Invalid codec";
+        case parser_unexpected_network:
+            return "Unexpected network";
+        case parser_unexpected_type_id:
+            return "Unexpected type id";
+        case parser_unexpected_threshold:
+            return "Unexpected threshold";
+        case parser_unexpected_unparsed_bytes:
+            return "Unexpected unparsed bytes";
+        case parser_invalid_time_stamp:
+            return "Invalid time stamp";
+        case parser_invalid_stake_amount:
+            return "Invalid stake amount";
+        case parser_unexpected_output_locked:
+            return "Unexpected output locked";
+        case parser_unsupported_tx:
+            return "Unsupported transaction";
+        case parser_blindsign_mode_required:
+            return "Blind sign mode required";
+
+        case parser_invalid_rs_values:
+            return "Invalid RS values";
+        case parser_invalid_chain_id:
+            return "Invalid chain id";
+
         default:
             return "Unrecognized error code";
     }

@@ -23,7 +23,7 @@
 #include "common/parser_common.h"
 #include "crypto_eth.h"
 #include "eth_erc20.h"
-#include "eth_utils.h"
+#include "evm_utils.h"
 #include "parser_txdef.h"
 #include "rlp.h"
 #include "uint256.h"
@@ -217,7 +217,7 @@ parser_error_t _validateTxEth() {
         return parser_ok;
     } else if (!app_mode_blindsign()) {  // If it is not an ERC20 transfer or data is not empty require blindsinging if not
                                          // enable
-        return parser_blindsign_required;
+        return parser_blindsign_mode_required;
     }
 
     return parser_ok;
@@ -464,7 +464,7 @@ parser_error_t _getItemEth(const parser_context_t *ctx, uint8_t displayIdx, char
         return printGeneric(ctx, displayIdx, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount);
     }
 
-    return parser_blindsign_required;
+    return parser_blindsign_mode_required;
 }
 
 // returns the number of items to display on the screen.

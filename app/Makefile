@@ -85,6 +85,8 @@ endif
 INCLUDES_PATH += $(CURDIR)/src/common
 INCLUDES_PATH += ../deps/ledger-zxlib/include
 INCLUDES_PATH += $(BOLOS_SDK)/lib_cxng/src
+# Enable EVM support
+ENABLE_EVM ?= 1
 
 
 ########################################

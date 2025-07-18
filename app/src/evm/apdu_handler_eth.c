@@ -18,12 +18,12 @@
 
 #include "actions.h"
 #include "app_main.h"
-#include "coin_eth.h"
+#include "coin_evm.h"
 #include "crypto_eth.h"
-#include "eth_addr.h"
-#include "eth_eip191.h"
-#include "eth_utils.h"
-#include "tx_eth.h"
+#include "evm_addr.h"
+#include "evm_eip191.h"
+#include "evm_utils.h"
+#include "tx_evm.h"
 #include "view.h"
 #include "view_internal.h"
 #include "zxmacros.h"
@@ -259,7 +259,7 @@ void handleSignEth(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
         const int error_msg_length = strnlen(error_msg, sizeof(G_io_apdu_buffer));
         MEMCPY(G_io_apdu_buffer, error_msg, error_msg_length);
         *tx += (error_msg_length);
-        if (error_code == parser_blindsign_required) {
+        if (error_code == parser_blindsign_mode_required) {
             *flags |= IO_ASYNCH_REPLY;
             view_blindsign_error_show();
         }
@@ -279,7 +279,7 @@ void handleSignEip191(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t 
     }
     CHECK_APP_CANARY()
     parser_error_t err = eip191_msg_parse();
-    if (err == parser_blindsign_required) {
+    if (err == parser_blindsign_mode_required) {
         *flags |= IO_ASYNCH_REPLY;
         view_blindsign_error_show();
         THROW(APDU_CODE_DATA_INVALID);

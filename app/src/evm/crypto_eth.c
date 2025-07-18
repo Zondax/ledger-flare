@@ -16,10 +16,10 @@
 
 #include "crypto_eth.h"
 
-#include "coin_eth.h"
+#include "coin_evm.h"
 #include "crypto_helper.h"
 #include "cx.h"
-#include "tx_eth.h"
+#include "tx_evm.h"
 #include "zxformat.h"
 #include "zxmacros.h"
 

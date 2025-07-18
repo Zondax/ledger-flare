@@ -22,7 +22,7 @@
 #include "coin.h"
 #include "crypto.h"
 #include "crypto_eth.h"
-#include "eth_eip191.h"
+#include "evm_eip191.h"
 #include "tx.h"
 #include "zxerror.h"
 
