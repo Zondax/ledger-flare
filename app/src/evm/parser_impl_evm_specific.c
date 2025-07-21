@@ -32,7 +32,6 @@
 #define TMP_DATA_ARRAY_SIZE 40
 #define ERC20_TRANSFER_OFFSET 4 + 12
 
-
 const uint64_t supported_networks_evm[SUPPORTED_NETWORKS_EVM_LEN] = {FLARE_MAINNET_CHAINID, COSTON_CHAINID,
                                                                      SONG_BIRD_CHAINID, COSTON2_CHAINID};
 
