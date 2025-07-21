@@ -13,26 +13,25 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  ********************************************************************************/
-
 #pragma once
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <sigutils.h>
-#include <stdbool.h>
+#include <stdint.h>
 
-#include "coin.h"
-#include "zxerror.h"
+#include "parser_common.h"
+#include "parser_impl_evm.h"
 
-extern uint32_t hdPathEth[HDPATH_LEN_DEFAULT];
-extern uint32_t hdPathEth_len;
-extern uint8_t flr_chain_code;
-zxerr_t crypto_fillEthAddress(uint8_t *buffer, uint16_t buffer_len, uint16_t *addrLen);
-zxerr_t crypto_sign_eth(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *message, uint16_t messageLen,
-                        uint16_t *sigSize, bool personal_msg);
-zxerr_t keccak_digest(const unsigned char *in, unsigned int inLen, unsigned char *out, unsigned int outLen);
+parser_error_t getNumItemsEthAppSpecific(uint8_t *numItems);
+
+parser_error_t printERC20TransferAppSpecific(const parser_context_t *ctx, eth_tx_t *ethTxObj, uint8_t displayIdx,
+                                             char *outKey, uint16_t outKeyLen, char *outVal, uint16_t outValLen,
+                                             uint8_t pageIdx, uint8_t *pageCount);
+
+parser_error_t printGenericAppSpecific(const parser_context_t *ctx, uint8_t displayIdx, char *outKey, uint16_t outKeyLen,
+                                       char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount);
 
 #ifdef __cplusplus
 }

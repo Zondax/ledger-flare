@@ -14,12 +14,11 @@
  *  limitations under the License.
  ********************************************************************************/
 #pragma once
-#include <nlohmann/json.hpp>
-
-#include <fstream>
-#include <vector>
-#include <string>
 #include <cstdint>
+#include <fstream>
+#include <nlohmann/json.hpp>
+#include <string>
+#include <vector>
 
 // Helper function to safely get string from JSON value (handles both string and number types)
 std::string getStringValue(const nlohmann::json &obj, const std::string &key, const std::string &defaultValue = "");

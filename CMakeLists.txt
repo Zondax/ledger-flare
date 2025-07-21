@@ -147,12 +147,14 @@ file(GLOB_RECURSE LIB_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/app/src/parser_print_common.c
     ${CMAKE_CURRENT_SOURCE_DIR}/app/src/tx_cchain.c
     ${CMAKE_CURRENT_SOURCE_DIR}/app/src/tx_pchain.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/app/src/evm/rlp.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/app/src/evm/uint256.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/app/src/evm/eth_erc20.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/app/src/evm/parser_impl_eth.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/app/src/evm/parser_eth.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/app/src/evm/eth_utils.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/app/src/evm/parser_impl_evm_specific.c
+
+    ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/evm/rlp.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/evm/uint256.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/evm/evm_utils.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/evm/parser_evm.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/evm/evm_erc20.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/evm/parser_impl_evm.c
 )
 
 add_library(app_lib STATIC ${LIB_SRC})
@@ -166,6 +168,7 @@ target_include_directories(app_lib PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/app/src/common
     ${CMAKE_CURRENT_SOURCE_DIR}/deps/picohash/
     ${CMAKE_CURRENT_SOURCE_DIR}/deps/ripemd160
+    ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/evm
 )
 
 # #############################################################

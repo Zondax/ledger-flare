@@ -16,9 +16,9 @@
 
 #include <coin.h>
 #include <fmt/core.h>
-#include <nlohmann/json.hpp>
 
 #include <cstdint>
+#include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
 

@@ -21,8 +21,8 @@
 #include "apdu_codes.h"
 #include "coin.h"
 #include "crypto.h"
-#include "crypto_eth.h"
-#include "eth_eip191.h"
+#include "crypto_evm.h"
+#include "evm_eip191.h"
 #include "tx.h"
 #include "zxerror.h"
 
@@ -105,7 +105,7 @@ __Z_INLINE void app_sign_eth() {
     }
 }
 
-__Z_INLINE void app_sign_eip191() {
+__Z_INLINE void app_sign_evm_eip191() {
     const uint8_t *message = tx_get_buffer();
     const uint16_t messageLength = tx_get_buffer_length();
     uint16_t replyLen = 0;

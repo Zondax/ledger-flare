@@ -15,7 +15,6 @@
  ********************************************************************************/
 
 #include <hexutils.h>
-#include <nlohmann/json.hpp>
 #include <parser_txdef.h>
 
 #include <algorithm>
@@ -24,6 +23,7 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <nlohmann/json.hpp>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -34,7 +34,7 @@
 #include "gtest/gtest.h"
 #include "parser.h"
 #include "parser_common.h"
-#include "parser_eth.h"
+#include "parser_evm.h"
 #include "testcases.h"
 #include "utils/common.h"
 
@@ -83,7 +83,7 @@ std::vector<testcase_t> GetJsonTestCases(std::string jsonFile) {
         uint64_t index = getUint64Value(obj[i], "index", 0);
         std::string name = getStringValue(obj[i], "name", "");
         std::string blob = getStringValue(obj[i], "blob", "");
-        
+
         answer.push_back(testcase_t{index, name, blob, outputs, outputs_expert});
     }
 
