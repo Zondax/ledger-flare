@@ -185,7 +185,6 @@ parser_error_t getNumItemsEthAppSpecific(uint8_t *numItems) {
 
 parser_error_t printGenericAppSpecific(const parser_context_t *ctx, uint8_t displayIdx, char *outKey, uint16_t outKeyLen,
                                        char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount) {
-    UNUSED(displayIdx);
     char data_array[TMP_DATA_ARRAY_SIZE] = {0};
 
     if ((displayIdx >= 3 && eth_tx_obj.tx.data.rlpLen == 0) || eth_tx_obj.tx.to.rlpLen == 0) {
