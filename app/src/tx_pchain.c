@@ -37,6 +37,9 @@ static parser_error_t parser_base_tx(parser_context_t *c, transferable_in_secp_t
 
     // Get inputs
     CHECK_ERROR(read_u32(c, &inputs->n_ins));
+    if (inputs->n_ins > MAX_INPUTS) {
+        return parser_unexpected_number_items;
+    }
 
     // Pointer to inputs
     if (inputs->n_ins > 0) {
@@ -457,6 +460,10 @@ parser_error_t print_base_tx(const parser_context_t *ctx, uint8_t displayIdx, ch
 
     if (displayIdx == ctx->tx_obj->tx.base_tx.base_secp_outs.n_addrs + ctx->tx_obj->tx.base_tx.base_secp_outs.n_outs + 1) {
         snprintf(outKey, outKeyLen, "Fee");
+        // Check for underflow before subtraction
+        if (ctx->tx_obj->tx.base_tx.base_secp_ins.in_sum < ctx->tx_obj->tx.base_tx.base_secp_outs.out_sum) {
+            return parser_unexpected_error;  // Invalid transaction: outputs exceed inputs
+        }
         uint64_t fee = ctx->tx_obj->tx.base_tx.base_secp_ins.in_sum - ctx->tx_obj->tx.base_tx.base_secp_outs.out_sum;
         CHECK_ERROR(
             printAmount64(fee, AMOUNT_DECIMAL_PLACES, ctx->tx_obj->network_id, outVal, outValLen, pageIdx, pageCount));
