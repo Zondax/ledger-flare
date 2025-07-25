@@ -119,7 +119,7 @@ parser_error_t printAddress(const uint8_t *pubkey, network_id_e network_id, char
             break;
     }
     char address[100] = {0};
-    const zxerr_t err = bech32EncodeFromBytes(address, sizeof(address), hrp, pubkey, 20, 1, BECH32_ENCODING_BECH32);
+    const zxerr_t err = bech32EncodeFromBytes(address, sizeof(address), hrp, pubkey, ADDRESS_LEN, 1, BECH32_ENCODING_BECH32);
 
     if (err != zxerr_ok) {
         return parser_unexpected_error;

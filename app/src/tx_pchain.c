@@ -271,8 +271,19 @@ parser_error_t print_p_export_tx(const parser_context_t *ctx, uint8_t displayIdx
 
     if (displayIdx == ctx->tx_obj->tx.p_export_tx.secp_outs.n_addrs + ctx->tx_obj->tx.p_export_tx.secp_outs.n_outs + 1) {
         snprintf(outKey, outKeyLen, "Fee");
-        uint64_t fee = ctx->tx_obj->tx.p_export_tx.base_secp_ins.in_sum -
-                       (ctx->tx_obj->tx.p_export_tx.base_secp_outs.out_sum + ctx->tx_obj->tx.p_export_tx.secp_outs.out_sum);
+        if (UINT64_MAX - ctx->tx_obj->tx.p_export_tx.base_secp_outs.out_sum < ctx->tx_obj->tx.p_export_tx.secp_outs.out_sum) {
+            // Prevent overflow
+            return parser_unexpected_value;
+        }
+        uint64_t outs_total = ctx->tx_obj->tx.p_export_tx.base_secp_outs.out_sum + ctx->tx_obj->tx.p_export_tx.secp_outs.out_sum;
+
+        if (outs_total > ctx->tx_obj->tx.p_export_tx.base_secp_ins.in_sum) {
+            // Prevent underflow
+            return parser_unexpected_value;
+        }
+
+        uint64_t fee = ctx->tx_obj->tx.p_export_tx.base_secp_ins.in_sum - outs_total;
+
         CHECK_ERROR(
             printAmount64(fee, AMOUNT_DECIMAL_PLACES, ctx->tx_obj->network_id, outVal, outValLen, pageIdx, pageCount));
         return parser_ok;

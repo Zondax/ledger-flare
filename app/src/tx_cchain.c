@@ -15,6 +15,7 @@
  ********************************************************************************/
 #include "tx_cchain.h"
 
+#include "common/parser_common.h"
 #include "parser_impl_common.h"
 #include "parser_print_common.h"
 #include "zxformat.h"
@@ -148,6 +149,10 @@ parser_error_t print_c_export_tx(const parser_context_t *ctx, uint8_t displayIdx
 
     if (displayIdx == ctx->tx_obj->tx.c_export_tx.secp_outs.n_addrs + ctx->tx_obj->tx.c_export_tx.secp_outs.n_outs + 1) {
         snprintf(outKey, outKeyLen, "Fee");
+        if (ctx->tx_obj->tx.c_export_tx.secp_outs.out_sum > ctx->tx_obj->tx.c_export_tx.evm_inputs.in_sum) {
+            // Prevent underflow
+            return parser_unexpected_value;
+        }
         uint64_t fee = ctx->tx_obj->tx.c_export_tx.evm_inputs.in_sum - ctx->tx_obj->tx.c_export_tx.secp_outs.out_sum;
         CHECK_ERROR(
             printAmount64(fee, AMOUNT_DECIMAL_PLACES, ctx->tx_obj->network_id, outVal, outValLen, pageIdx, pageCount));
@@ -207,6 +212,10 @@ parser_error_t print_c_import_tx(const parser_context_t *ctx, uint8_t displayIdx
 
     if (displayIdx == (2 * ctx->tx_obj->tx.c_import_tx.evm_outs.n_outs) + 1) {
         snprintf(outKey, outKeyLen, "Fee");
+        if (ctx->tx_obj->tx.c_import_tx.secp_inputs.in_sum < ctx->tx_obj->tx.c_import_tx.evm_outs.out_sum) {
+            // Prevent underflow
+            return parser_unexpected_value;
+        }
         uint64_t fee = ctx->tx_obj->tx.c_import_tx.secp_inputs.in_sum - ctx->tx_obj->tx.c_import_tx.evm_outs.out_sum;
         CHECK_ERROR(
             printAmount64(fee, AMOUNT_DECIMAL_PLACES, ctx->tx_obj->network_id, outVal, outValLen, pageIdx, pageCount));
