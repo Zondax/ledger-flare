@@ -424,6 +424,10 @@ parser_error_t parse_secp_owners_output(parser_context_t *c, secp_owners_out_t *
             return parser_unexpected_threshold;
         }
 
+        if (n_addresses == 0) {
+            return parser_unexpected_n_address_zero;
+        }
+
         // Validate n_addresses to prevent overflow when multiplying by ADDRESS_LEN
         if (n_addresses > UINT16_MAX / ADDRESS_LEN) {
             return parser_value_out_of_range;

@@ -154,14 +154,13 @@ parser_error_t parser_handle_add_permissionless_delegator_validator(parser_conte
 
     if (v->tx_type == add_permissionless_validator_tx) {
         CHECK_ERROR(read_u32(c, &v->tx.add_permissionless_validator_tx.signer.signer_type));
-
         if (v->tx.add_permissionless_validator_tx.signer.signer_type == PROOF_OF_POSSESSION_TYPE_ID) {
             CHECK_ERROR(verifyContext(c));
-            v->tx.add_permissionless_validator_tx.signer.signer_data.proof_of_possession.public_key = c->buffer + c->offset;
+            v->tx.add_permissionless_validator_tx.signer.proof_of_possession.public_key = c->buffer + c->offset;
             CHECK_ERROR(verifyBytes(c, 48));
 
             CHECK_ERROR(verifyContext(c));
-            v->tx.add_permissionless_validator_tx.signer.signer_data.proof_of_possession.signature = c->buffer + c->offset;
+            v->tx.add_permissionless_validator_tx.signer.proof_of_possession.signature = c->buffer + c->offset;
             CHECK_ERROR(verifyBytes(c, 96));
         } else if (v->tx.add_permissionless_validator_tx.signer.signer_type != EMPTY_SIGNER_TYPE_ID) {
             return parser_unexpected_type;

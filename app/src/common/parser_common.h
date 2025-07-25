@@ -62,6 +62,7 @@ typedef enum {
     parser_unexpected_network,
     parser_unexpected_type_id,
     parser_unexpected_threshold,
+    parser_unexpected_n_address_zero,
     parser_unexpected_unparsed_bytes,
     parser_invalid_time_stamp,
     parser_invalid_stake_amount,

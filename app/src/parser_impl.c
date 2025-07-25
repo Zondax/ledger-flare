@@ -80,6 +80,8 @@ const char *parser_getErrorDescription(parser_error_t err) {
             return "Unexpected type id";
         case parser_unexpected_threshold:
             return "Unexpected threshold";
+        case parser_unexpected_n_address_zero:
+            return "Unexpected n_address zero";
         case parser_unexpected_unparsed_bytes:
             return "Unexpected unparsed bytes";
         case parser_invalid_time_stamp:
