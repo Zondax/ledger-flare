@@ -32,7 +32,7 @@ static parser_error_t parser_handle_cchain_export(parser_context_t *c, parser_tx
 
     // Get number of inputs
     CHECK_ERROR(read_u32(c, &v->tx.c_export_tx.evm_inputs.n_ins));
-    if (v->tx.c_export_tx.evm_inputs.n_ins > MAX_INPUTS) {
+    if (v->tx.c_export_tx.evm_inputs.n_ins > MAX_INPUTS || v->tx.c_export_tx.evm_inputs.n_ins == 0) {
         return parser_unexpected_number_items;
     }
 
