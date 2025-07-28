@@ -27,37 +27,6 @@
         ]
     },
     {
-        "index": 2,
-        "name": "Export_Tx_2_outputs",
-        "blob": "0000000000010000007278db5c30bed04c05ce209179812850bbb3fe6d46d7eef3744d814c0da55524790000000000000000000000000000000000000000000000000000000000000000000000015a6a8c28a2fc040df3b7490440c50f00099c957a000000028fb5f04058734f94af871c3d131b56131b6fb7a0291eacadd261e69dfb42a9cdf6f7fddd000000000000001c0000000258734f94af871c3d131b56131b6fb7a0291eacadd261e69dfb42a9cdf6f7fddd0000000700000002541b264000000000000000000000000100000002db89a2339639a5f3fa183258cfea265e4d1cce6cdb89a2339639a5f3fa183258cfea265e4d1cce6b58734f94af871c3d131b56131b6fb7a0291eacadd261e69dfb42a9cdf6f7fddd0000000700000002541b264100000000000000000000000100000001db89a2339639a5f3fa183258cfea265e4d1cce6c",
-        "output": [
-            "0 | Export : C to P chain",
-            "1 | Amount : 10.001 C2FLR",
-            "2 | Address [1/2] : costwo1mwy6yvuk8xjl87scxfvvl63xtex3enn",
-            "2 | Address [2/2] : vwcckmr",
-            "3 | Address [1/2] : costwo1mwy6yvuk8xjl87scxfvvl63xtex3enn",
-            "3 | Address [2/2] : t0p0x6x",
-            "4 | Amount : 10.001000001 C2FLR",
-            "5 | Address [1/2] : costwo1mwy6yvuk8xjl87scxfvvl63xtex3enn",
-            "5 | Address [2/2] : vwcckmr",
-            "6 | Fee : 18446744064.708551615 C2FLR"
-        ],
-        "output_expert": [
-            "0 | Export : C to P chain",
-            "1 | Amount : 10.001 C2FLR",
-            "2 | Address [1/2] : costwo1mwy6yvuk8xjl87scxfvvl63xtex3enn",
-            "2 | Address [2/2] : vwcckmr",
-            "3 | Address [1/2] : costwo1mwy6yvuk8xjl87scxfvvl63xtex3enn",
-            "3 | Address [2/2] : t0p0x6x",
-            "4 | Amount : 10.001000001 C2FLR",
-            "5 | Address [1/2] : costwo1mwy6yvuk8xjl87scxfvvl63xtex3enn",
-            "5 | Address [2/2] : vwcckmr",
-            "6 | Fee : 18446744064.708551615 C2FLR",
-            "7 | Hash [1/2] : d72e803ccb6d9e9a472ad72f3ca2e750375462",
-            "7 | Hash [2/2] : 0a47f8c9dab43cde2a61854857"
-        ]
-    },
-    {
         "index": 3,
         "name": "Import_Tx",
         "blob": "0000000000110000007200000000000000000000000000000000000000000000000000000000000000000000000158734f94af871c3d131b56131b6fb7a0291eacadd261e69dfb42a9cdf6f7fddd0000000700000002540be40000000000000000000000000100000001db89a2339639a5f3fa183258cfea265e4d1cce6c000000000000000078db5c30bed04c05ce209179812850bbb3fe6d46d7eef3744d814c0da55524790000000114303038e53caca8410bed68d5dd0f8e3a397d6e64657d83319133490fb5cd9b0000000058734f94af871c3d131b56131b6fb7a0291eacadd261e69dfb42a9cdf6f7fddd0000000500000002541b26400000000100000000",
