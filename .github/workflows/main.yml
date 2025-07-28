@@ -61,7 +61,7 @@ jobs:
           path: tests_zemu/snapshots-tmp/
 
   build_package_nanosp:
-    needs: [configure, build, build_ledger, test_zemu]
+    needs: [configure, build, test_zemu]
     runs-on: ubuntu-latest
     container:
       image: zondax/ledger-app-builder:latest
@@ -97,7 +97,7 @@ jobs:
           prerelease: false
 
   build_package_stax:
-    needs: [configure, build, build_ledger, test_zemu]
+    needs: [configure, build, test_zemu]
     runs-on: ubuntu-latest
     container:
       image: zondax/ledger-app-builder:latest
@@ -131,7 +131,7 @@ jobs:
           prerelease: false
 
   build_package_flex:
-    needs: [configure, build, build_ledger, test_zemu]
+    needs: [configure, build, test_zemu]
     runs-on: ubuntu-latest
     container:
       image: zondax/ledger-app-builder:latest

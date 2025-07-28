@@ -34,5 +34,5 @@ try:
 
 except ImportError as e:
     print(f"Error: Cannot import common fuzzing module: {e}")
-    print(f"Make sure deps/ledger-zxlib/fuzzing/run_fuzzers.py exists")
+    print("Make sure deps/ledger-zxlib/fuzzing/run_fuzzers.py exists")
     sys.exit(1)
