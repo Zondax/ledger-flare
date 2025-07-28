@@ -417,9 +417,7 @@ parser_error_t parse_secp_owners_output(parser_context_t *c, secp_owners_out_t *
         // Get number of Addresses
         uint32_t n_addresses = 0;
         CHECK_ERROR(read_u32(c, &n_addresses));
-        if (n_addresses == 0) {
-            return parser_unexpected_number_items;
-        }
+
         outputs->n_addr += n_addresses;
 
         if (n_addresses == 0) {
