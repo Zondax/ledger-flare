@@ -64,7 +64,15 @@ tests_zemu/.pnp.*
 .idea
 
 node_modules
-fuzz/corpora
+fuzz/corpora/
+fuzz/coverage/
+fuzz/logs/
+fuzz-*.log
+
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
 
 !build/.gitkeep
 build/*
