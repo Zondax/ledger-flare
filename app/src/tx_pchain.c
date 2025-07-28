@@ -37,6 +37,9 @@ static parser_error_t parser_base_tx(parser_context_t *c, transferable_in_secp_t
 
     // Get inputs
     CHECK_ERROR(read_u32(c, &inputs->n_ins));
+    if (inputs->n_ins > MAX_INPUTS) {
+        return parser_unexpected_number_items;
+    }
 
     // Pointer to inputs
     if (inputs->n_ins > 0) {
@@ -151,14 +154,13 @@ parser_error_t parser_handle_add_permissionless_delegator_validator(parser_conte
 
     if (v->tx_type == add_permissionless_validator_tx) {
         CHECK_ERROR(read_u32(c, &v->tx.add_permissionless_validator_tx.signer.signer_type));
-
         if (v->tx.add_permissionless_validator_tx.signer.signer_type == PROOF_OF_POSSESSION_TYPE_ID) {
             CHECK_ERROR(verifyContext(c));
-            v->tx.add_permissionless_validator_tx.signer.signer_data.proof_of_possession.public_key = c->buffer + c->offset;
+            v->tx.add_permissionless_validator_tx.signer.proof_of_possession.public_key = c->buffer + c->offset;
             CHECK_ERROR(verifyBytes(c, 48));
 
             CHECK_ERROR(verifyContext(c));
-            v->tx.add_permissionless_validator_tx.signer.signer_data.proof_of_possession.signature = c->buffer + c->offset;
+            v->tx.add_permissionless_validator_tx.signer.proof_of_possession.signature = c->buffer + c->offset;
             CHECK_ERROR(verifyBytes(c, 96));
         } else if (v->tx.add_permissionless_validator_tx.signer.signer_type != EMPTY_SIGNER_TYPE_ID) {
             return parser_unexpected_type;
@@ -268,8 +270,21 @@ parser_error_t print_p_export_tx(const parser_context_t *ctx, uint8_t displayIdx
 
     if (displayIdx == ctx->tx_obj->tx.p_export_tx.secp_outs.n_addrs + ctx->tx_obj->tx.p_export_tx.secp_outs.n_outs + 1) {
         snprintf(outKey, outKeyLen, "Fee");
-        uint64_t fee = ctx->tx_obj->tx.p_export_tx.base_secp_ins.in_sum -
-                       (ctx->tx_obj->tx.p_export_tx.base_secp_outs.out_sum + ctx->tx_obj->tx.p_export_tx.secp_outs.out_sum);
+        if (UINT64_MAX - ctx->tx_obj->tx.p_export_tx.base_secp_outs.out_sum <
+            ctx->tx_obj->tx.p_export_tx.secp_outs.out_sum) {
+            // Prevent overflow
+            return parser_unexpected_value;
+        }
+        uint64_t outs_total =
+            ctx->tx_obj->tx.p_export_tx.base_secp_outs.out_sum + ctx->tx_obj->tx.p_export_tx.secp_outs.out_sum;
+
+        if (outs_total > ctx->tx_obj->tx.p_export_tx.base_secp_ins.in_sum) {
+            // Prevent underflow
+            return parser_unexpected_value;
+        }
+
+        uint64_t fee = ctx->tx_obj->tx.p_export_tx.base_secp_ins.in_sum - outs_total;
+
         CHECK_ERROR(
             printAmount64(fee, AMOUNT_DECIMAL_PLACES, ctx->tx_obj->network_id, outVal, outValLen, pageIdx, pageCount));
         return parser_ok;
@@ -328,8 +343,22 @@ parser_error_t print_p_import_tx(const parser_context_t *ctx, uint8_t displayIdx
     if (displayIdx ==
         ctx->tx_obj->tx.p_import_tx.base_secp_outs.n_addrs + ctx->tx_obj->tx.p_import_tx.base_secp_outs.n_outs + 1) {
         snprintf(outKey, outKeyLen, "Fee");
-        uint64_t fee = (ctx->tx_obj->tx.p_import_tx.base_secp_ins.in_sum + ctx->tx_obj->tx.p_import_tx.secp_ins.in_sum) -
-                       ctx->tx_obj->tx.p_import_tx.base_secp_outs.out_sum;
+
+        uint64_t base_secp_ins_in_sum = ctx->tx_obj->tx.p_import_tx.base_secp_ins.in_sum;
+        uint64_t secp_ins_in_sum = ctx->tx_obj->tx.p_import_tx.secp_ins.in_sum;
+        uint64_t base_secp_outs_out_sum = ctx->tx_obj->tx.p_import_tx.base_secp_outs.out_sum;
+
+        // Prevent overflow
+        if (base_secp_ins_in_sum > UINT64_MAX - secp_ins_in_sum) {
+            return parser_unexpected_value;
+        }
+
+        // Prevent underflow
+        if (base_secp_ins_in_sum + secp_ins_in_sum < base_secp_outs_out_sum) {
+            return parser_unexpected_value;
+        }
+
+        uint64_t fee = (base_secp_ins_in_sum + secp_ins_in_sum) - base_secp_outs_out_sum;
         CHECK_ERROR(
             printAmount64(fee, AMOUNT_DECIMAL_PLACES, ctx->tx_obj->network_id, outVal, outValLen, pageIdx, pageCount));
         return parser_ok;
@@ -389,6 +418,16 @@ parser_error_t print_add_permissionless_del_val_tx(const parser_context_t *ctx, 
                 break;
             } else {
                 snprintf(outKey, outKeyLen, "Fee");
+                if (UINT64_MAX - ctx->tx_obj->tx.add_permissionless_delegator_tx.base_secp_outs.out_sum <
+                    ctx->tx_obj->tx.add_permissionless_delegator_tx.stake_outs.out_sum) {
+                    return parser_unexpected_value;
+                }
+                uint64_t outs_total = ctx->tx_obj->tx.add_permissionless_delegator_tx.base_secp_outs.out_sum +
+                                      ctx->tx_obj->tx.add_permissionless_delegator_tx.stake_outs.out_sum;
+
+                if (outs_total > ctx->tx_obj->tx.add_permissionless_delegator_tx.base_secp_ins.in_sum) {
+                    return parser_unexpected_value;
+                }
                 uint64_t fee = ctx->tx_obj->tx.add_permissionless_delegator_tx.base_secp_ins.in_sum -
                                (ctx->tx_obj->tx.add_permissionless_delegator_tx.base_secp_outs.out_sum +
                                 ctx->tx_obj->tx.add_permissionless_delegator_tx.stake_outs.out_sum);
@@ -399,6 +438,19 @@ parser_error_t print_add_permissionless_del_val_tx(const parser_context_t *ctx, 
         case 6:
             if (ctx->tx_obj->tx_type == add_permissionless_validator_tx) {
                 snprintf(outKey, outKeyLen, "Fee");
+                if (UINT64_MAX - ctx->tx_obj->tx.add_permissionless_validator_tx.base_secp_outs.out_sum <
+                    ctx->tx_obj->tx.add_permissionless_validator_tx.stake_outs.out_sum) {
+                    // Prevent overflow
+                    return parser_unexpected_value;
+                }
+                uint64_t outs_total = ctx->tx_obj->tx.add_permissionless_validator_tx.base_secp_outs.out_sum +
+                                      ctx->tx_obj->tx.add_permissionless_validator_tx.stake_outs.out_sum;
+
+                if (outs_total > ctx->tx_obj->tx.add_permissionless_validator_tx.base_secp_ins.in_sum) {
+                    // Prevent underflow
+                    return parser_unexpected_value;
+                }
+
                 uint64_t fee = ctx->tx_obj->tx.add_permissionless_validator_tx.base_secp_ins.in_sum -
                                (ctx->tx_obj->tx.add_permissionless_validator_tx.base_secp_outs.out_sum +
                                 ctx->tx_obj->tx.add_permissionless_validator_tx.stake_outs.out_sum);
@@ -457,6 +509,10 @@ parser_error_t print_base_tx(const parser_context_t *ctx, uint8_t displayIdx, ch
 
     if (displayIdx == ctx->tx_obj->tx.base_tx.base_secp_outs.n_addrs + ctx->tx_obj->tx.base_tx.base_secp_outs.n_outs + 1) {
         snprintf(outKey, outKeyLen, "Fee");
+        // Check for underflow before subtraction
+        if (ctx->tx_obj->tx.base_tx.base_secp_ins.in_sum < ctx->tx_obj->tx.base_tx.base_secp_outs.out_sum) {
+            return parser_unexpected_error;  // Invalid transaction: outputs exceed inputs
+        }
         uint64_t fee = ctx->tx_obj->tx.base_tx.base_secp_ins.in_sum - ctx->tx_obj->tx.base_tx.base_secp_outs.out_sum;
         CHECK_ERROR(
             printAmount64(fee, AMOUNT_DECIMAL_PLACES, ctx->tx_obj->network_id, outVal, outValLen, pageIdx, pageCount));

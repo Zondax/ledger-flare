@@ -171,12 +171,7 @@ typedef struct {
 
 typedef struct {
     uint32_t signer_type;
-    union {
-        struct {
-            // Empty on purpose
-        } empty_signer;
-        proof_of_possession_t proof_of_possession;
-    } signer_data;
+    proof_of_possession_t proof_of_possession;
 } signer_t;
 
 typedef struct {

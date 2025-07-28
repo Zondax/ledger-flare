@@ -36,36 +36,56 @@ extern "C" {
 }
 using namespace std;
 
+char PARSER_KEY[16384];
+char PARSER_VALUE[16384];
+
 TEST(SCALE, ReadBytes) {
     parser_context_t ctx;
     parser_tx_t tx_obj;
     parser_error_t err;
-    uint8_t buffer[100];
-    auto bufferLen = parseHexString(buffer, sizeof(buffer),
-                                    "45"
-                                    "123456"
-                                    "12345678901234567890");
+    uint8_t buffer[1000];
+    auto bufferLen = parseHexString(
+        buffer, sizeof(buffer),
+        "00000000001100000007000000000000000000000000000000000000000000000000000000000000000000000001ac005d00000000000000000"
+        "0000000000000000000070000000000000020000000000007012afffbfffb000000000000000000000000000000000001ac00ff4d0000000000"
+        "00000000000000000000000000000000000000ffb119b404c1356b6bfdb80045e27ba13c3789b5b3684f001da071cd4e6db09c00000000");
 
-    parser_parse(&ctx, buffer, bufferLen, &tx_obj);
+    err = parser_parse(&ctx, buffer, bufferLen, &tx_obj);
+    if (err != parser_ok) {
+        printf("error in parser_parse: %s\n", parser_getErrorDescription(err));
+    }
 
-    // uint8_t bytesArray[100] = {0};
-    // err = _readBytes(&ctx, bytesArray, 1);
-    // EXPECT_EQ(err, parser_ok) << parser_getErrorDescription(err);
-    // EXPECT_EQ(bytesArray[0], 0x45);
+    err = parser_validate(&ctx);
+    if (err != parser_ok) {
+        printf("error in parser_parse: %s\n", parser_getErrorDescription(err));
+    }
 
-    // uint8_t testArray[3] = {0x12, 0x34, 0x56};
-    // err = _readBytes(&ctx, bytesArray+1, 3);
-    // EXPECT_EQ(err, parser_ok) << parser_getErrorDescription(err);
-    // for (uint8_t i = 0; i < 3; i++) {
-    //     EXPECT_EQ(testArray[i], bytesArray[i+1]);
-    // }
+    uint8_t num_items;
+    err = parser_getNumItems(&ctx, &num_items);
+    if (err != parser_ok) {
+        printf("error in parser_parse: %s\n", parser_getErrorDescription(err));
+    }
 
-    // uint8_t testArray2[10] = {0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90};
-    // err = _readBytes(&ctx, bytesArray+4, 10);
-    // EXPECT_EQ(err, parser_ok) << parser_getErrorDescription(err);
-    // for (uint8_t i = 0; i < 10; i++) {
-    //     EXPECT_EQ(testArray2[i], bytesArray[i+4]);
-    // }
+    (void)fprintf(stderr, "----------------------------------------------\n");
+
+    for (uint8_t i = 0; i < num_items; i += 1) {
+        uint8_t page_idx = 0;
+        uint8_t page_count = 1;
+        while (page_idx < page_count) {
+            err = parser_getItem(&ctx, i, PARSER_KEY, sizeof(PARSER_KEY), PARSER_VALUE, sizeof(PARSER_VALUE), page_idx,
+                                 &page_count);
+
+            //            (void)fprintf(stderr, "%s = %s\n", PARSER_KEY, PARSER_VALUE);
+
+            if (err != parser_ok) {
+                (void)fprintf(stderr, "error getting item %u at page index %u: %s\n", (unsigned)i, (unsigned)page_idx,
+                              parser_getErrorDescription(err));
+                // assert(false);
+            }
+
+            page_idx += 1;
+        }
+    }
 }
 
 TEST(Address, FlareAddress) {

@@ -154,7 +154,6 @@ parser_error_t verifyContext(parser_context_t *ctx) {
 }
 
 parser_error_t verifyBytes(parser_context_t *ctx, uint16_t buffLen) {
-    CTX_CHECK_AVAIL(ctx, buffLen)
     CTX_CHECK_AND_ADVANCE(ctx, buffLen)
     return parser_ok;
 }
@@ -203,6 +202,11 @@ parser_error_t parse_evm_inputs(parser_context_t *c, evm_inputs_t *evm) {
     }
     evm->in_sum = 0;
 
+    // Validate n_ins to prevent excessive iterations
+    if (evm->n_ins > MAX_INPUTS) {
+        return parser_unexpected_number_items;
+    }
+
     for (uint32_t i = 0; i < evm->n_ins; i++) {
         // Skip address
         CHECK_ERROR(verifyBytes(c, ADDRESS_LEN));
@@ -210,6 +214,11 @@ parser_error_t parse_evm_inputs(parser_context_t *c, evm_inputs_t *evm) {
         // Save amount
         uint64_t amount = 0;
         CHECK_ERROR(read_u64(c, &amount));
+
+        // Check for overflow before adding amount
+        if (evm->in_sum > UINT64_MAX - amount) {
+            return parser_value_out_of_range;
+        }
         evm->in_sum += amount;
 
         // Skip assetID
@@ -228,6 +237,11 @@ parser_error_t parse_transferable_secp_output(parser_context_t *c, transferable_
     }
     outputs->out_sum = 0;
 
+    // Validate n_outs to prevent excessive iterations
+    if (outputs->n_outs > MAX_OUTPUTS) {
+        return parser_unexpected_number_items;
+    }
+
     for (uint32_t i = 0; i < outputs->n_outs; i++) {
         // skip assetId
         CHECK_ERROR(verifyBytes(c, ASSET_ID_LEN));
@@ -242,6 +256,11 @@ parser_error_t parse_transferable_secp_output(parser_context_t *c, transferable_
         // Save amount to total
         uint64_t amount = 0;
         CHECK_ERROR(read_u64(c, &amount));
+
+        // Check for overflow before adding amount
+        if (outputs->out_sum > UINT64_MAX - amount) {
+            return parser_value_out_of_range;
+        }
         outputs->out_sum += amount;
 
         // Skip locktime
@@ -263,6 +282,13 @@ parser_error_t parse_transferable_secp_output(parser_context_t *c, transferable_
             return parser_unexpected_threshold;
         }
 
+        // Validate tmp_n_adresses to prevent excessive iterations
+        if (tmp_n_adresses > MAX_OUTPUTS) {
+            return parser_unexpected_number_items;
+        }
+
+        CHECK_ERROR(checkAvailableBytes(c, tmp_n_adresses * ADDRESS_LEN));
+
         for (uint32_t j = 0; j < tmp_n_adresses; j++) {
             verifyBytes(c, ADDRESS_LEN);
             outputs->n_addrs++;
@@ -278,6 +304,11 @@ parser_error_t parse_evm_output(parser_context_t *c, evm_outs_t *outputs) {
     }
     outputs->out_sum = 0;
 
+    // Validate n_outs to prevent excessive iterations
+    if (outputs->n_outs > MAX_OUTPUTS) {
+        return parser_unexpected_number_items;
+    }
+
     for (uint32_t i = 0; i < outputs->n_outs; i++) {
         // Check address is renderable
         verifyBytes(c, ADDRESS_LEN);
@@ -285,6 +316,11 @@ parser_error_t parse_evm_output(parser_context_t *c, evm_outs_t *outputs) {
         // Save amount to total
         uint64_t amount = 0;
         CHECK_ERROR(read_u64(c, &amount));
+
+        // Check for overflow before adding amount
+        if (outputs->out_sum > UINT64_MAX - amount) {
+            return parser_value_out_of_range;
+        }
         outputs->out_sum += amount;
 
         // skip assetId
@@ -299,6 +335,11 @@ parser_error_t parse_transferable_secp_input(parser_context_t *c, transferable_i
         return parser_unexpected_error;
     }
     inputs->in_sum = 0;
+
+    // Validate n_ins to prevent excessive iterations
+    if (inputs->n_ins > MAX_INPUTS) {
+        return parser_unexpected_number_items;
+    }
 
     for (uint32_t i = 0; i < inputs->n_ins; i++) {
         // skip TxID
@@ -320,11 +361,26 @@ parser_error_t parse_transferable_secp_input(parser_context_t *c, transferable_i
         // Save amount
         uint64_t amount = 0;
         CHECK_ERROR(read_u64(c, &amount));
+
+        // Check for overflow before adding amount
+        if (inputs->in_sum > UINT64_MAX - amount) {
+            return parser_value_out_of_range;
+        }
         inputs->in_sum += amount;
 
         // Get Address indices
         uint32_t n_indices = 0;
         CHECK_ERROR(read_u32(c, &n_indices));
+
+        // Validate n_indices to prevent overflow when multiplying by sizeof(uint32_t)
+        if (n_indices > UINT16_MAX / sizeof(uint32_t)) {
+            return parser_value_out_of_range;
+        }
+
+        // Validate n_indices to prevent excessive iterations
+        if (n_indices > MAX_OUTPUTS) {
+            return parser_unexpected_number_items;
+        }
 
         // skip addresses
         CHECK_ERROR(verifyBytes(c, sizeof(uint32_t) * n_indices));
@@ -336,6 +392,11 @@ parser_error_t parse_transferable_secp_input(parser_context_t *c, transferable_i
 parser_error_t parse_secp_owners_output(parser_context_t *c, secp_owners_out_t *outputs) {
     if (outputs == NULL) {
         return parser_unexpected_error;
+    }
+
+    // Validate n_outs to prevent excessive iterations
+    if (outputs->n_outs > MAX_OUTPUTS) {
+        return parser_unexpected_number_items;
     }
 
     for (uint32_t i = 0; i < outputs->n_outs; i++) {
@@ -356,10 +417,27 @@ parser_error_t parse_secp_owners_output(parser_context_t *c, secp_owners_out_t *
         // Get number of Addresses
         uint32_t n_addresses = 0;
         CHECK_ERROR(read_u32(c, &n_addresses));
+        if (n_addresses == 0) {
+            return parser_unexpected_number_items;
+        }
         outputs->n_addr += n_addresses;
 
         if (threshold > n_addresses || (n_addresses == 0 && threshold != 0)) {
             return parser_unexpected_threshold;
+        }
+
+        if (n_addresses == 0) {
+            return parser_unexpected_n_address_zero;
+        }
+
+        // Validate n_addresses to prevent overflow when multiplying by ADDRESS_LEN
+        if (n_addresses > UINT16_MAX / ADDRESS_LEN) {
+            return parser_value_out_of_range;
+        }
+
+        // Validate n_addresses to prevent excessive iterations
+        if (n_addresses > MAX_OUTPUTS) {
+            return parser_unexpected_number_items;
         }
 
         // skip addresses
@@ -377,6 +455,17 @@ parser_error_t parser_go_to_next_transferable_output(parser_context_t *c) {
     c->offset += ADDRESS_OFFSET;
     uint32_t n_addresses = 0;
     CHECK_ERROR(read_u32(c, &n_addresses));
+
+    // Validate n_addresses to prevent overflow when multiplying by ADDRESS_LEN
+    if (n_addresses > UINT16_MAX / ADDRESS_LEN) {
+        return parser_value_out_of_range;
+    }
+
+    // Validate n_addresses to prevent excessive iterations
+    if (n_addresses > MAX_OUTPUTS) {
+        return parser_unexpected_number_items;
+    }
+
     CHECK_ERROR(verifyBytes(c, ADDRESS_LEN * n_addresses));
 
     return parser_ok;
@@ -398,20 +487,28 @@ parser_error_t parser_get_secp_output_for_index(parser_context_t *out_ctx, trans
             *element_idx = 0;
             return parser_ok;
         }
+        count++;  // Increment count after checking amount
 
         CHECK_ERROR(verifyBytes(out_ctx, N_ADDRESS_OFFSET));
         CHECK_ERROR(read_u32(out_ctx, &out_n_addr));
+
+        // Validate out_n_addr to prevent excessive iterations
+        if (out_n_addr > MAX_OUTPUTS) {
+            return parser_unexpected_number_items;
+        }
+
+        // Make sure N addresses are available
+        CHECK_ERROR(checkAvailableBytes(out_ctx, out_n_addr * ADDRESS_LEN));
+
         // Go through output addresses and check if its the index we are looking for return element >0 for address print
         for (uint32_t j = 1; j <= out_n_addr; j++) {
             CHECK_ERROR(readBytes(out_ctx, address, ADDRESS_LEN));
-            count++;
             if (count == inner_displayIdx) {
                 *element_idx = j;
                 return parser_ok;
             }
+            count++;
         }
-        // We did not find the index in the address add one for the next amoount we are about to read
-        count++;
     }
     return parser_unexpected_number_items;
 }
