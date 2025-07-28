@@ -422,12 +422,11 @@ parser_error_t parse_secp_owners_output(parser_context_t *c, secp_owners_out_t *
         }
         outputs->n_addr += n_addresses;
 
-        if (threshold > n_addresses || (n_addresses == 0 && threshold != 0)) {
-            return parser_unexpected_threshold;
-        }
-
         if (n_addresses == 0) {
             return parser_unexpected_n_address_zero;
+        }
+        if (threshold > n_addresses) {
+            return parser_unexpected_threshold;
         }
 
         // Validate n_addresses to prevent overflow when multiplying by ADDRESS_LEN
