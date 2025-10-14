@@ -22,7 +22,6 @@ extern "C" {
 
 #include "parser_impl.h"
 
-const char *parser_getErrorDescription(parser_error_t err);
 const char *parser_getMsgPackTypeDescription(uint8_t type);
 
 parser_error_t parser_init_context(parser_context_t *ctx, const uint8_t *buffer, uint16_t bufferSize);

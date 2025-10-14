@@ -78,7 +78,7 @@ __Z_INLINE bool process_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_t rx) {
         THROW(APDU_CODE_WRONG_LENGTH);
     }
 
-    uint32_t added;
+    uint32_t added = 0;
     switch (payloadType) {
         case P1_INIT:
             tx_initialize();
@@ -108,9 +108,11 @@ __Z_INLINE bool process_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_t rx) {
             }
             tx_initialized = false;
             return true;
+        default:
+            THROW(APDU_CODE_INVALIDP1P2);
     }
 
-    THROW(APDU_CODE_INVALIDP1P2);
+    return false;
 }
 
 __Z_INLINE void handleGetAddr(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
@@ -150,7 +152,7 @@ __Z_INLINE void handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint
         THROW(APDU_CODE_DATA_INVALID);
     }
 
-    uint8_t error_code;
+    uint8_t error_code = 0;
     const char *error_msg = tx_parse(&error_code);
     CHECK_APP_CANARY()
     if (error_msg != NULL) {

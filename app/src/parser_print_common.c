@@ -67,7 +67,7 @@ parser_error_t printAmount64(uint64_t amount, uint8_t amountDenom, network_id_e 
         return parser_unexpected_error;
     }
 
-    const char *symbol = "";
+    const char *symbol = NULL;
     switch (network_id) {
         case songbird:
             symbol = " SGB";
@@ -100,7 +100,7 @@ parser_error_t printAddress(const uint8_t *pubkey, network_id_e network_id, char
         return parser_unexpected_error;
     }
 
-    const char *hrp = "";
+    const char *hrp = NULL;
     switch (network_id) {
         case songbird:
             hrp = "song";
