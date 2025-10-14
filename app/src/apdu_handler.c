@@ -110,7 +110,7 @@ __Z_INLINE bool process_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_t rx) {
             return true;
         default:
             THROW(APDU_CODE_INVALIDP1P2);
-            return false; // to avoid linter error
+            return false;  // to avoid linter error
     }
 }
 
