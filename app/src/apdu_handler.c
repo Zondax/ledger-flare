@@ -110,9 +110,8 @@ __Z_INLINE bool process_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_t rx) {
             return true;
         default:
             THROW(APDU_CODE_INVALIDP1P2);
+            return false; // to avoid linter error
     }
-
-    return false;
 }
 
 __Z_INLINE void handleGetAddr(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
