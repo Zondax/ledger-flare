@@ -8,6 +8,7 @@ const APP_PATH_X = resolve('../app/output/app_x.elf')
 const APP_PATH_SP = resolve('../app/output/app_s2.elf')
 const APP_PATH_ST = resolve('../app/output/app_stax.elf')
 const APP_PATH_F = resolve('../app/output/app_flex.elf')
+const APP_PATH_AP = resolve('../app/output/app_apex_p.elf')
 
 export const hdpath = `m/44'/60'/0/0/0`
 export const PATH_TESTNET = "m/44'/1'/0'/0/1"
@@ -23,6 +24,7 @@ export const models: IDeviceModel[] = [
   { name: 'nanosp', prefix: 'SP', path: APP_PATH_SP },
   { name: 'stax', prefix: 'ST', path: APP_PATH_ST },
   { name: 'flex', prefix: 'FL', path: APP_PATH_F },
+  { name: 'apex_p', prefix: 'AP', path: APP_PATH_AP },
 ]
 
 export const defaultOptions = {
