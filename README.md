@@ -11,9 +11,9 @@ _Please visit our website at [zondax.ch](https://www.zondax.ch)_
 
 ---
 
-This project contains the Flare app for Ledger Nano S+, Nano X, Stax and Flex.
+This project contains the Flare app for Ledger Nano S+, Nano X, Stax, Flex and Apex P.
 
-- Ledger Nano S+/X, Stax and Flex Flare app
+- Ledger Nano S+/X, Stax, Flex and Apex P Flare app
 - Specs / Documentation
 - C++ unit tests
 - Zemu tests
