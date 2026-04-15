@@ -94,6 +94,13 @@ zxerr_t crypto_sign(uint8_t *signature, uint16_t signatureMaxlen, uint16_t *sigS
     if (!hash) {
         crypto_sha256(message, messageLen, messageDigest, CX_SHA256_SIZE);
     } else {
+        // Defensive bound: messageDigest is a 32-byte stack buffer adjacent
+        // to the private-key material below. The only current hash=true
+        // caller path enforces messageLen==32 via hash_parse, but guarding
+        // here keeps that invariant local to the copy.
+        if (messageLen > sizeof(messageDigest)) {
+            return zxerr_invalid_crypto_settings;
+        }
         MEMCPY(messageDigest, message, messageLen);
     }
 
