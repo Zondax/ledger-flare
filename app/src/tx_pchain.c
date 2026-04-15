@@ -202,6 +202,12 @@ parser_error_t parser_handle_add_permissionless_delegator_validator(parser_conte
 
     if (v->tx_type == add_permissionless_validator_tx) {
         CHECK_ERROR(read_u32(c, &v->tx.add_permissionless_validator_tx.delegation_shares));
+        // delegation_shares is in units of 0.0001% with 100% == 1_000_000.
+        // Anything larger is out of the protocol-valid range and would
+        // render as nonsense percentages in the review UI.
+        if (v->tx.add_permissionless_validator_tx.delegation_shares > 1000000u) {
+            return parser_value_out_of_range;
+        }
     }
 
     return parser_ok;
