@@ -69,7 +69,7 @@ uint8_t extractHRP(uint32_t rx, uint32_t offset) {
         THROW(APDU_CODE_DATA_INVALID);
     }
 
-    if (rx < (uint32_t)offset + 1u + bech32_hrp_len) {
+    if (rx < offset + 1U + bech32_hrp_len) {
         THROW(APDU_CODE_WRONG_LENGTH);
     }
 

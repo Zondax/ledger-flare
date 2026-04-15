@@ -209,38 +209,38 @@ parser_error_t _read(parser_context_t *ctx, parser_tx_t *v) {
 
 parser_error_t getNumItems(const parser_context_t *ctx, uint8_t *numItems) {
     *numItems = 0;
-    const uint32_t expertModeHashField = app_mode_expert() ? 1u : 0u;
+    const uint32_t expertModeHashField = app_mode_expert() ? 1U : 0U;
     uint32_t total = 0;
     switch (ctx->tx_obj->tx_type) {
         case base_tx:
             // Tx + fee + Amounts(= n_outs) + Addresses
-            total = 2u + ctx->tx_obj->tx.base_tx.base_secp_outs.n_addrs +
-                    ctx->tx_obj->tx.base_tx.base_secp_outs.n_outs + expertModeHashField;
+            total = 2U + ctx->tx_obj->tx.base_tx.base_secp_outs.n_addrs + ctx->tx_obj->tx.base_tx.base_secp_outs.n_outs +
+                    expertModeHashField;
             break;
         case p_export_tx:
             // Tx + fee + Amounts(= n_outs) + Addresses
-            total = 2u + ctx->tx_obj->tx.p_export_tx.secp_outs.n_addrs +
-                    ctx->tx_obj->tx.p_export_tx.secp_outs.n_outs + expertModeHashField;
+            total = 2U + ctx->tx_obj->tx.p_export_tx.secp_outs.n_addrs + ctx->tx_obj->tx.p_export_tx.secp_outs.n_outs +
+                    expertModeHashField;
             break;
         case p_import_tx:
             // Tx + fee + Amounts(= n_outs) + Addresses
-            total = 2u + ctx->tx_obj->tx.p_import_tx.base_secp_outs.n_addrs +
+            total = 2U + ctx->tx_obj->tx.p_import_tx.base_secp_outs.n_addrs +
                     ctx->tx_obj->tx.p_import_tx.base_secp_outs.n_outs + expertModeHashField;
             break;
         case c_export_tx:
             // Tx + fee + Amounts(= n_outs) + Addresses
-            total = 2u + ctx->tx_obj->tx.c_export_tx.secp_outs.n_addrs +
-                    ctx->tx_obj->tx.c_export_tx.secp_outs.n_outs + expertModeHashField;
+            total = 2U + ctx->tx_obj->tx.c_export_tx.secp_outs.n_addrs + ctx->tx_obj->tx.c_export_tx.secp_outs.n_outs +
+                    expertModeHashField;
             break;
         case c_import_tx:
             // Tx + fee + (amount + address) * n_outs
-            total = 2u + (2u * ctx->tx_obj->tx.c_import_tx.evm_outs.n_outs) + expertModeHashField;
+            total = 2U + (2U * ctx->tx_obj->tx.c_import_tx.evm_outs.n_outs) + expertModeHashField;
             break;
         case add_permissionless_delegator_tx:
-            total = 6u + expertModeHashField;
+            total = 6U + expertModeHashField;
             break;
         case add_permissionless_validator_tx:
-            total = 7u + expertModeHashField;
+            total = 7U + expertModeHashField;
             break;
         default:
             break;

@@ -315,7 +315,7 @@ parser_error_t parse_transferable_secp_output(parser_context_t *c, transferable_
             outputs->n_addrs++;
             // Cap aggregate address count so the UI item total (2 + n_addrs + n_outs + expert)
             // cannot wrap the uint8_t numItems used by the display layer.
-            if (outputs->n_addrs > (uint32_t)(UINT8_MAX - MAX_OUTPUTS - 3u)) {
+            if (outputs->n_addrs > (uint32_t)(UINT8_MAX - MAX_OUTPUTS - 3U)) {
                 return parser_unexpected_number_items;
             }
         }
