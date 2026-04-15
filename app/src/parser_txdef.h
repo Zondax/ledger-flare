@@ -222,6 +222,11 @@ typedef struct {
     network_id_e network_id;
     const uint8_t *blockchain_id;
     chain_id_e chain_id;
+    // Pointer to the first asset ID seen while parsing inputs/outputs.
+    // Used to enforce that every input/output in the transaction carries
+    // the same asset ID (the network's native asset), since the display
+    // layer labels all amounts with the network-native symbol.
+    const uint8_t *expected_asset_id;
     tx_t tx;
 } parser_tx_t;
 

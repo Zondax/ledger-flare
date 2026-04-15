@@ -73,6 +73,27 @@ static const uint32_t chain_lookup_len = sizeof(chain_lookup_table) / sizeof(cha
         return parser_unexpected_buffer_end;                            \
     }
 
+// Consume the next ASSET_ID_LEN bytes and verify they match every previously
+// parsed asset ID on this transaction. The first asset ID seen is captured
+// as the expected one; any later mismatch is rejected. Flare's P-chain
+// staking/import/export and C-chain atomic flows are native-asset-only, so
+// every asset ID in a valid tx must be identical.
+static parser_error_t verify_asset_id(parser_context_t *c) {
+    if (c == NULL || c->offset + ASSET_ID_LEN > c->bufferLen) {
+        return parser_unexpected_buffer_end;
+    }
+    const uint8_t *asset_ptr = c->buffer + c->offset;
+    if (c->tx_obj != NULL) {
+        if (c->tx_obj->expected_asset_id == NULL) {
+            c->tx_obj->expected_asset_id = asset_ptr;
+        } else if (MEMCMP(c->tx_obj->expected_asset_id, asset_ptr, ASSET_ID_LEN) != 0) {
+            return parser_unexpected_network;
+        }
+    }
+    c->offset += ASSET_ID_LEN;
+    return parser_ok;
+}
+
 #define CTX_CHECK_AND_ADVANCE(CTX, SIZE) \
     CTX_CHECK_AVAIL((CTX), (SIZE))       \
     (CTX)->offset += (SIZE);
@@ -221,8 +242,8 @@ parser_error_t parse_evm_inputs(parser_context_t *c, evm_inputs_t *evm) {
         }
         evm->in_sum += amount;
 
-        // Skip assetID
-        CHECK_ERROR(verifyBytes(c, ASSET_ID_LEN));
+        // Verify assetID matches the tx-wide native asset and advance.
+        CHECK_ERROR(verify_asset_id(c));
 
         // Skip nonce
         CHECK_ERROR(verifyBytes(c, NONCE_LEN));
@@ -243,8 +264,8 @@ parser_error_t parse_transferable_secp_output(parser_context_t *c, transferable_
     }
 
     for (uint32_t i = 0; i < outputs->n_outs; i++) {
-        // skip assetId
-        CHECK_ERROR(verifyBytes(c, ASSET_ID_LEN));
+        // Verify assetId matches the tx-wide native asset and advance.
+        CHECK_ERROR(verify_asset_id(c));
 
         // Skip typeID
         uint32_t typeID = 0;
@@ -292,6 +313,11 @@ parser_error_t parse_transferable_secp_output(parser_context_t *c, transferable_
         for (uint32_t j = 0; j < tmp_n_adresses; j++) {
             verifyBytes(c, ADDRESS_LEN);
             outputs->n_addrs++;
+            // Cap aggregate address count so the UI item total (2 + n_addrs + n_outs + expert)
+            // cannot wrap the uint8_t numItems used by the display layer.
+            if (outputs->n_addrs > (uint32_t)(UINT8_MAX - MAX_OUTPUTS - 3u)) {
+                return parser_unexpected_number_items;
+            }
         }
     }
 
@@ -323,8 +349,8 @@ parser_error_t parse_evm_output(parser_context_t *c, evm_outs_t *outputs) {
         }
         outputs->out_sum += amount;
 
-        // skip assetId
-        CHECK_ERROR(verifyBytes(c, ASSET_ID_LEN));
+        // Verify assetId matches the tx-wide native asset and advance.
+        CHECK_ERROR(verify_asset_id(c));
     }
 
     return parser_ok;
@@ -348,8 +374,8 @@ parser_error_t parse_transferable_secp_input(parser_context_t *c, transferable_i
         // skip UTXOIndex
         CHECK_ERROR(verifyBytes(c, UTXOINDEX));
 
-        // skip ASSET_ID
-        CHECK_ERROR(verifyBytes(c, ASSET_ID_LEN));
+        // Verify ASSET_ID matches the tx-wide native asset and advance.
+        CHECK_ERROR(verify_asset_id(c));
 
         // Skip typeID
         uint32_t typeID = 0;
@@ -418,24 +444,15 @@ parser_error_t parse_secp_owners_output(parser_context_t *c, secp_owners_out_t *
         uint32_t n_addresses = 0;
         CHECK_ERROR(read_u32(c, &n_addresses));
 
-        outputs->n_addr += n_addresses;
-
-        if (n_addresses == 0) {
-            return parser_unexpected_n_address_zero;
-        }
-        if (threshold > n_addresses) {
+        // Reward-owner UI renders a single address and never shows the
+        // threshold or additional signers. Reject anything other than the
+        // single-address policy so the displayed payload matches what is
+        // signed; legitimate Flare wallets always emit threshold=1/n=1.
+        if (threshold != 1 || n_addresses != 1) {
             return parser_unexpected_threshold;
         }
 
-        // Validate n_addresses to prevent overflow when multiplying by ADDRESS_LEN
-        if (n_addresses > UINT16_MAX / ADDRESS_LEN) {
-            return parser_value_out_of_range;
-        }
-
-        // Validate n_addresses to prevent excessive iterations
-        if (n_addresses > MAX_OUTPUTS) {
-            return parser_unexpected_number_items;
-        }
+        outputs->n_addr += n_addresses;
 
         // skip addresses
         outputs->addr = c->buffer + c->offset;

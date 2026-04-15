@@ -42,7 +42,7 @@ static bool tx_initialized = false;
 void extractHDPath(uint32_t rx, uint32_t offset) {
     tx_initialized = false;
 
-    if ((rx - offset) < sizeof(uint32_t) * HDPATH_LEN_DEFAULT) {
+    if (rx < offset || (rx - offset) < sizeof(uint32_t) * HDPATH_LEN_DEFAULT) {
         THROW(APDU_CODE_WRONG_LENGTH);
     }
 
@@ -64,6 +64,10 @@ uint8_t extractHRP(uint32_t rx, uint32_t offset) {
 
     if (bech32_hrp_len == 0 || bech32_hrp_len > MAX_BECH32_HRP_LEN) {
         THROW(APDU_CODE_DATA_INVALID);
+    }
+
+    if (rx < (uint32_t)offset + 1u + bech32_hrp_len) {
+        THROW(APDU_CODE_WRONG_LENGTH);
     }
 
     memcpy(bech32_hrp, G_io_apdu_buffer + offset + 1, bech32_hrp_len);

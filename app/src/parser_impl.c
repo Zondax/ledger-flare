@@ -183,6 +183,8 @@ parser_error_t _read(parser_context_t *ctx, parser_tx_t *v) {
         return parser_init_context_empty;
     }
 
+    v->expected_asset_id = NULL;
+
     CHECK_ERROR(parser_verify_codec(ctx))
 
     // Read Tx type raw value
@@ -207,44 +209,49 @@ parser_error_t _read(parser_context_t *ctx, parser_tx_t *v) {
 
 parser_error_t getNumItems(const parser_context_t *ctx, uint8_t *numItems) {
     *numItems = 0;
-    const uint8_t expertModeHashField = app_mode_expert() ? 1 : 0;
+    const uint32_t expertModeHashField = app_mode_expert() ? 1u : 0u;
+    uint32_t total = 0;
     switch (ctx->tx_obj->tx_type) {
         case base_tx:
             // Tx + fee + Amounts(= n_outs) + Addresses
-            *numItems = 2 + ctx->tx_obj->tx.base_tx.base_secp_outs.n_addrs + ctx->tx_obj->tx.base_tx.base_secp_outs.n_outs +
-                        expertModeHashField;
+            total = 2u + ctx->tx_obj->tx.base_tx.base_secp_outs.n_addrs +
+                    ctx->tx_obj->tx.base_tx.base_secp_outs.n_outs + expertModeHashField;
             break;
         case p_export_tx:
             // Tx + fee + Amounts(= n_outs) + Addresses
-            *numItems = 2 + ctx->tx_obj->tx.p_export_tx.secp_outs.n_addrs + ctx->tx_obj->tx.p_export_tx.secp_outs.n_outs +
-                        expertModeHashField;
+            total = 2u + ctx->tx_obj->tx.p_export_tx.secp_outs.n_addrs +
+                    ctx->tx_obj->tx.p_export_tx.secp_outs.n_outs + expertModeHashField;
             break;
         case p_import_tx:
             // Tx + fee + Amounts(= n_outs) + Addresses
-            *numItems = 2 + ctx->tx_obj->tx.p_import_tx.base_secp_outs.n_addrs +
-                        ctx->tx_obj->tx.p_import_tx.base_secp_outs.n_outs + expertModeHashField;
+            total = 2u + ctx->tx_obj->tx.p_import_tx.base_secp_outs.n_addrs +
+                    ctx->tx_obj->tx.p_import_tx.base_secp_outs.n_outs + expertModeHashField;
             break;
         case c_export_tx:
             // Tx + fee + Amounts(= n_outs) + Addresses
-            *numItems = 2 + ctx->tx_obj->tx.c_export_tx.secp_outs.n_addrs + ctx->tx_obj->tx.c_export_tx.secp_outs.n_outs +
-                        expertModeHashField;
+            total = 2u + ctx->tx_obj->tx.c_export_tx.secp_outs.n_addrs +
+                    ctx->tx_obj->tx.c_export_tx.secp_outs.n_outs + expertModeHashField;
             break;
         case c_import_tx:
             // Tx + fee + (amount + address) * n_outs
-            *numItems = 2 + (2 * ctx->tx_obj->tx.c_import_tx.evm_outs.n_outs) + expertModeHashField;
+            total = 2u + (2u * ctx->tx_obj->tx.c_import_tx.evm_outs.n_outs) + expertModeHashField;
             break;
         case add_permissionless_delegator_tx:
-            *numItems = 6 + expertModeHashField;
+            total = 6u + expertModeHashField;
             break;
         case add_permissionless_validator_tx:
-            *numItems = 7 + expertModeHashField;
+            total = 7u + expertModeHashField;
             break;
         default:
             break;
     }
 
-    if (*numItems == 0) {
+    if (total == 0) {
         return parser_unexpected_number_items;
     }
+    if (total > UINT8_MAX) {
+        return parser_unexpected_number_items;
+    }
+    *numItems = (uint8_t)total;
     return parser_ok;
 }
