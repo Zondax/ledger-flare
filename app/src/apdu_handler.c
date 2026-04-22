@@ -39,10 +39,13 @@
 
 static bool tx_initialized = false;
 
+// Storage for the review-pending lock declared in actions.h.
+volatile bool g_review_pending = false;
+
 void extractHDPath(uint32_t rx, uint32_t offset) {
     tx_initialized = false;
 
-    if ((rx - offset) < sizeof(uint32_t) * HDPATH_LEN_DEFAULT) {
+    if (rx < offset || (rx - offset) < sizeof(uint32_t) * HDPATH_LEN_DEFAULT) {
         THROW(APDU_CODE_WRONG_LENGTH);
     }
 
@@ -64,6 +67,10 @@ uint8_t extractHRP(uint32_t rx, uint32_t offset) {
 
     if (bech32_hrp_len == 0 || bech32_hrp_len > MAX_BECH32_HRP_LEN) {
         THROW(APDU_CODE_DATA_INVALID);
+    }
+
+    if (rx < offset + 1U + bech32_hrp_len) {
+        THROW(APDU_CODE_WRONG_LENGTH);
     }
 
     memcpy(bech32_hrp, G_io_apdu_buffer + offset + 1, bech32_hrp_len);
@@ -224,6 +231,13 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
 
     BEGIN_TRY {
         TRY {
+            // Reject any new APDU while an async user review is pending so the
+            // host cannot swap the tx buffer between review rendering and the
+            // approval callback (TOCTOU).
+            if (review_is_pending()) {
+                THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
+            }
+
             const uint8_t cla = G_io_apdu_buffer[OFFSET_CLA];
 
             if ((cla != CLA) && (cla != CLA_ETH)) {
@@ -295,6 +309,15 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                     default:
                         THROW(APDU_CODE_INS_NOT_SUPPORTED);
                 }
+            }
+
+            // If a handler entered async review (IO_ASYNCH_REPLY set with no
+            // THROW), lock the dispatcher until the approval/reject callback
+            // clears the pending flag. Error paths that raise IO_ASYNCH_REPLY
+            // (e.g. blind-sign warning screens) THROW instead of falling
+            // through, so they don't reach this line.
+            if ((*flags & IO_ASYNCH_REPLY) != 0) {
+                review_mark_pending();
             }
         }
         CATCH(EXCEPTION_IO_RESET) { THROW(EXCEPTION_IO_RESET); }
