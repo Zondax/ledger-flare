@@ -24,7 +24,7 @@
   "dependencies": {
     "@ledgerhq/hw-transport-node-hid": "6.33.0",
     "@zondax/ledger-flare": "../js",
-    "@zondax/zemu": "^0.66.2"
+    "@zondax/zemu": "^0.67.3"
   },
   "devDependencies": {
     "@ethereumjs/common": "^10.0.0",
