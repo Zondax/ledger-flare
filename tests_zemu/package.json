@@ -17,14 +17,10 @@
     "clean": "ts-node tests/pullImageKillOld.ts",
     "test": "yarn clean && jest --maxConcurrency 3"
   },
-  "resolutions": {
-    "axios": "^1.10.0",
-    "glob": "^11.0.3"
-  },
   "dependencies": {
     "@ledgerhq/hw-transport-node-hid": "6.33.0",
     "@zondax/ledger-flare": "../js",
-    "@zondax/zemu": "^0.67.3"
+    "@zondax/zemu": "^0.67.4"
   },
   "devDependencies": {
     "@ethereumjs/common": "^10.0.0",
