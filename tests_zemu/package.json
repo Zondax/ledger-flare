@@ -15,7 +15,7 @@
   ],
   "scripts": {
     "clean": "ts-node tests/pullImageKillOld.ts",
-    "test": "yarn clean && jest --maxConcurrency 3"
+    "test": "pnpm clean && jest --maxConcurrency 3"
   },
   "dependencies": {
     "@ledgerhq/hw-transport-node-hid": "6.33.0",
@@ -44,6 +44,7 @@
     "eslint-plugin-tsdoc": "^0.5.2",
     "eslint-plugin-unused-imports": "^4.2.0",
     "jest": "30.3.0",
+    "js-sha3": "^0.9.3",
     "jest-runner": "^30.2.0",
     "jest-serial-runner": "^1.2.2",
     "js-sha256": "0.11.1",
