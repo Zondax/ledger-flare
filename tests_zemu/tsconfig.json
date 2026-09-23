@@ -6,7 +6,16 @@
     "declaration": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "baseUrl": ".",
+    "paths": {
+      "@ledgerhq/device-management-kit": [
+        "./node_modules/@ledgerhq/device-management-kit/lib/types/index.d.ts"
+      ],
+      "@ledgerhq/device-transport-kit-node-hid": [
+        "./node_modules/@ledgerhq/device-transport-kit-node-hid/lib/types/index.d.ts"
+      ]
+    }
   },
   "exclude": [
     "node_modules",
