@@ -22,7 +22,7 @@
 #include "zxformat.h"
 #include "zxmacros.h"
 
-#if defined(LEDGER_SPECIFIC)
+#ifdef LEDGER_SPECIFIC
 #include "cx.h"
 #else
 #include "picohash.h"
@@ -161,7 +161,7 @@ parser_error_t printNodeId(const uint8_t *nodeId, char *outVal, uint16_t outValL
 
     // Calculate SHA256 checksum
     uint8_t checksum[CX_SHA256_SIZE] = {0};
-#if defined(LEDGER_SPECIFIC)
+#ifdef LEDGER_SPECIFIC
     cx_sha256_t ctx;
     memset(&ctx, 0, sizeof(ctx));
     cx_sha256_init_no_throw(&ctx);
@@ -204,7 +204,7 @@ parser_error_t printHash(const parser_context_t *ctx, char *outVal, uint16_t out
                          uint8_t *pageCount) {
     unsigned char hash[CX_SHA256_SIZE] = {0};
 
-#if defined(LEDGER_SPECIFIC)
+#ifdef LEDGER_SPECIFIC
     cx_sha256_t hash_ctx;
     memset(&hash_ctx, 0, sizeof(hash_ctx));
     CHECK_CX_PARSER_OK(cx_sha256_init_no_throw(&hash_ctx));
